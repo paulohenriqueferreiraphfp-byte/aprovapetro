@@ -17,6 +17,7 @@ export default function Home() {
   const [showDateModal, setShowDateModal] = useState(false);
   const [editExamDate, setEditExamDate] = useState('');
   const [isSavingDate, setIsSavingDate] = useState(false);
+  const [greeting, setGreeting] = useState('Olá');
   const router = useRouter();
 
   const handleTaskClick = (index: number, type: string) => {
@@ -39,6 +40,11 @@ export default function Home() {
   };
 
   useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) setGreeting('Bom dia');
+    else if (hour >= 12 && hour < 18) setGreeting('Boa tarde');
+    else setGreeting('Boa noite');
+
     const u = JSON.parse(localStorage.getItem('user') || 'null');
     if (!u) {
       router.push('/login');
@@ -154,7 +160,7 @@ const AVATARS = [
         
         {/* GREETING */}
         <motion.section variants={itemVariants}>
-          <h1 className="text-2xl font-bold">Bom dia, {data.name}!</h1>
+          <h1 className="text-2xl font-bold">{greeting}, {data.name}!</h1>
           <button 
             onClick={() => setShowDateModal(true)}
             className="text-left text-zinc-400 mt-1 hover:text-white transition-colors"
