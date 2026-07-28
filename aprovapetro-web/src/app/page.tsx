@@ -177,7 +177,9 @@ const AVATARS = [
           <Card className="bg-[#111C22] border-zinc-800/50 rounded-2xl relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-t from-[#F5C518]/5 to-transparent" />
             <CardContent className="p-6 flex flex-col items-center relative z-10">
-              <h3 className="text-sm text-zinc-400 mb-6">AprovaPETRO Index</h3>
+              <h3 className="text-xl font-black uppercase tracking-widest mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#00A35C] via-[#3ADB6E] to-[#F5C518] drop-shadow-[0_0_15px_rgba(58,219,110,0.3)]">
+                AprovaPETRO Index
+              </h3>
               
               <div className="relative w-32 h-32 mb-6">
                 <svg viewBox="0 0 100 100" className={`w-full h-full transform -rotate-90`} style={{ filter: `drop-shadow(0 0 10px ${data.indexStatus?.color}40)` }}>
