@@ -149,8 +149,11 @@ export default function PerfilPage() {
             >
               <Settings className="w-4 h-4 mr-2 text-[#3ADB6E]" /> Editar Perfil
             </Button>
-            <Button variant="outline" className="flex-1 bg-[#0A0F0D] border-zinc-700 hover:bg-[#111C22] text-zinc-300 transition-all active:scale-95">
-              <Calendar className="w-4 h-4 mr-2 text-[#F5C518]" /> Exame: 24 Set
+            <Button onClick={() => router.push('/')} variant="outline" className="flex-1 bg-[#0A0F0D] border-zinc-700 hover:bg-[#111C22] text-zinc-300 transition-all active:scale-95">
+              <Calendar className="w-4 h-4 mr-2 text-[#F5C518]" /> 
+              {data.daysToExam !== null && data.daysToExam !== undefined 
+                ? (data.daysToExam === 0 ? 'Exame: HOJE' : `Faltam ${data.daysToExam} dias`) 
+                : 'Definir Data'}
             </Button>
           </div>
         </motion.div>

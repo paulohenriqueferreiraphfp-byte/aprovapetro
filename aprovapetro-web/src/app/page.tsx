@@ -14,6 +14,9 @@ export default function Home() {
   const [data, setData] = useState<any>(null);
   const [completedTasks, setCompletedTasks] = useState<number[]>([]);
   const [showRankModal, setShowRankModal] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [editExamDate, setEditExamDate] = useState('');
+  const [isSavingDate, setIsSavingDate] = useState(false);
   const router = useRouter();
 
   const handleTaskClick = (index: number, type: string) => {
@@ -51,9 +54,38 @@ export default function Home() {
     
     fetch(url.toString())
       .then(res => res.json())
-      .then(setData)
+      .then(d => {
+        setData(d);
+        if (d.examDate) {
+          setEditExamDate(new Date(d.examDate).toISOString().split('T')[0]);
+        }
+      })
       .catch(console.error);
   }, [router]);
+
+  const handleSaveExamDate = async () => {
+    setIsSavingDate(true);
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || 'null');
+      const res = await fetch(`https://aprovapetro.onrender.com/api/users/${data.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ examDate: editExamDate })
+      });
+      if (res.ok) {
+        const url = new URL(`https://aprovapetro.onrender.com/api/dashboard`);
+        if (u.userId) url.searchParams.append('userId', u.userId);
+        const newData = await fetch(url.toString()).then(r => r.json());
+        setData(newData);
+        setShowDateModal(false);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao salvar a data da prova.');
+    } finally {
+      setIsSavingDate(false);
+    }
+  };
 
 const AVATARS = [
   { id: 'avatar-1', icon: User, color: '#3ADB6E', bg: 'bg-[#3ADB6E]/20' },
@@ -123,7 +155,20 @@ const AVATARS = [
         {/* GREETING */}
         <motion.section variants={itemVariants}>
           <h1 className="text-2xl font-bold">Bom dia, {data.name}!</h1>
-          <p className="text-zinc-400 mt-1">Faltam <span className="text-[#F5C518] font-bold">43 dias</span> para a prova.</p>
+          <button 
+            onClick={() => setShowDateModal(true)}
+            className="text-left text-zinc-400 mt-1 hover:text-white transition-colors"
+          >
+            {data.daysToExam !== null && data.daysToExam !== undefined ? (
+              data.daysToExam === 0 ? (
+                <>Chegou o grande dia! A prova é <span className="text-[#F5C518] font-bold">HOJE</span>!</>
+              ) : (
+                <>Faltam <span className="text-[#F5C518] font-bold">{data.daysToExam} dias</span> para a prova. ✏️</>
+              )
+            ) : (
+              <>Defina a data ou previsão da sua prova ⏳</>
+            )}
+          </button>
         </motion.section>
 
         {/* MISSÃO DIÁRIA */}
@@ -319,6 +364,53 @@ const AVATARS = [
               >
                 CONTINUAR TREINANDO
               </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDateModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#111C22] w-full max-w-sm rounded-3xl border border-zinc-800 shadow-2xl p-6 relative overflow-hidden"
+            >
+              <button 
+                onClick={() => setShowDateModal(false)}
+                className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              
+              <h2 className="text-xl font-bold mb-6 text-white uppercase tracking-wider text-center">Data da Prova 🎯</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-3 block text-center">Qual o dia ou a previsão?</label>
+                  <input 
+                    type="date" 
+                    value={editExamDate}
+                    onChange={(e) => setEditExamDate(e.target.value)}
+                    className="w-full bg-[#0A0F0D] border border-zinc-700 rounded-xl p-4 text-white focus:outline-none focus:border-[#3ADB6E] transition-colors [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                  />
+                </div>
+
+                <Button 
+                  onClick={handleSaveExamDate}
+                  disabled={isSavingDate || !editExamDate}
+                  className="w-full bg-[#3ADB6E] hover:bg-[#009266] text-[#0A0F0D] font-bold py-6 rounded-xl mt-4"
+                >
+                  {isSavingDate ? 'SALVANDO...' : 'CONFIRMAR DATA'}
+                </Button>
+              </div>
             </motion.div>
           </motion.div>
         )}
