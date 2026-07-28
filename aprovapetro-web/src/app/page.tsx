@@ -202,7 +202,7 @@ const AVATARS = [
 
               <div className="bg-[#0A0F0D] px-4 py-2 rounded-full border border-zinc-800">
                 <span className="text-sm font-medium" style={{ color: data.indexStatus?.color || '#3ADB6E' }}>
-                  Você está no Top {data.topPercent || 100}%
+                  {data.rankMessage || `Você está no Top ${data.topPercent || 100}%`}
                 </span>
               </div>
             </CardContent>
