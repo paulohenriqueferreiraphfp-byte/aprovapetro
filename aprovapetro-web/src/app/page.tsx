@@ -5,14 +5,15 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Target, BookOpen, BrainCircuit, Bot, User, Clock, CheckCircle2, ChevronRight, Trophy, Zap, Shield } from 'lucide-react';
+import { Flame, Target, BookOpen, BrainCircuit, Bot, User, Clock, CheckCircle2, ChevronRight, Trophy, Zap, Shield, X } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
   const [data, setData] = useState<any>(null);
   const [completedTasks, setCompletedTasks] = useState<number[]>([]);
+  const [showRankModal, setShowRankModal] = useState(false);
   const router = useRouter();
 
   const handleTaskClick = (index: number, type: string) => {
@@ -273,12 +274,55 @@ const AVATARS = [
               <p className="text-xs text-zinc-400">Você ultrapassou 420 candidatos hoje.</p>
             </div>
           </div>
-          <Button size="sm" className="bg-[#F5C518] hover:bg-[#d9a51c] text-black font-bold rounded-xl transition-transform active:scale-95">
+          <Button onClick={() => setShowRankModal(true)} size="sm" className="bg-[#F5C518] hover:bg-[#d9a51c] text-black font-bold rounded-xl transition-transform active:scale-95">
             Ver Rank
           </Button>
         </motion.div>
         
       </motion.main>
+
+      <AnimatePresence>
+        {showRankModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#111C22] w-full max-w-sm rounded-3xl border border-zinc-800 shadow-2xl p-6 relative overflow-hidden text-center"
+            >
+              <button 
+                onClick={() => setShowRankModal(false)}
+                className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              
+              <Trophy className="w-16 h-16 text-[#F5C518] mx-auto mb-4" />
+              <h2 className="text-2xl font-black text-white mb-2 uppercase">Ranking Global</h2>
+              <p className="text-zinc-400 text-sm mb-6">
+                Você está no <strong className="text-[#3ADB6E]">Top {data.topPercent}%</strong> de todos os usuários do AprovaPETRO.
+              </p>
+              
+              <div className="bg-[#0A0F0D] p-4 rounded-xl border border-zinc-800 mb-6">
+                <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold mb-1">Seu XP Atual</p>
+                <p className="text-2xl font-bold text-[#F5C518]">{data.xp} XP</p>
+              </div>
+
+              <Button 
+                onClick={() => setShowRankModal(false)}
+                className="w-full bg-[#3ADB6E] hover:bg-[#009266] text-[#0A0F0D] font-bold py-6 rounded-xl"
+              >
+                CONTINUAR TREINANDO
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <BottomNav />
     </div>
