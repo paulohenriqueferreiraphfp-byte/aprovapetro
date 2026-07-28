@@ -145,15 +145,19 @@ export class AppController {
   }
 
   @Post('users/:id')
-  async updateUser(@Param('id') id: string, @Body() body: { name?: string, avatarId?: string }) {
+  async updateUser(@Param('id') id: string, @Body() body: { name?: string, avatarId?: string, examDate?: string }) {
+    const dataToUpdate: any = {
+      name: body.name,
+      avatarId: body.avatarId
+    };
+    if (body.examDate !== undefined) {
+      dataToUpdate.examDate = body.examDate ? new Date(body.examDate) : null;
+    }
     const user = await this.prisma.user.update({
       where: { id },
-      data: {
-        name: body.name,
-        avatarId: body.avatarId
-      }
+      data: dataToUpdate
     });
-    return { success: true, name: user.name, avatarId: user.avatarId };
+    return { success: true, name: user.name, avatarId: user.avatarId, examDate: user.examDate };
   }
 
   @Get('dashboard')
@@ -177,7 +181,18 @@ export class AppController {
     let totalTimeMs = answers.reduce((acc, curr) => acc + (curr.timeSpentMs || 0), 0);
     
     const precision = totalQuestions === 0 ? 0 : Math.round((correctCount / totalQuestions) * 100);
-    const hours = Math.round(totalTimeMs / (1000 * 60 * 60)) || 0; 
+    
+    const totalMinutes = Math.floor(totalTimeMs / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    const timeFormatted = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+
+    let daysToExam = null;
+    if (user.examDate) {
+      const diffTime = new Date(user.examDate).getTime() - new Date().getTime();
+      daysToExam = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (daysToExam < 0) daysToExam = 0;
+    } 
 
     // REAL RANKING
     const usersAhead = await this.prisma.user.count({
@@ -225,7 +240,9 @@ export class AppController {
       name: user.name,
       cargoName: user.cargo?.name || "Aluno PETRO",
       avatarId: user.avatarId,
-      stats: { totalQuestions, hours, precision },
+      examDate: user.examDate,
+      daysToExam,
+      stats: { totalQuestions, timeFormatted, precision },
 
       topSubjects,
       mission: mission ? {
