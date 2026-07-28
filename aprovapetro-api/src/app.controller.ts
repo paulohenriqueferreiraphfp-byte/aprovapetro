@@ -177,7 +177,22 @@ export class AppController {
     let totalTimeMs = answers.reduce((acc, curr) => acc + (curr.timeSpentMs || 0), 0);
     
     const precision = totalQuestions === 0 ? 0 : Math.round((correctCount / totalQuestions) * 100);
-    const hours = Math.round(totalTimeMs / (1000 * 60 * 60)) || 0; // Or just a mock if too low
+    const hours = Math.round(totalTimeMs / (1000 * 60 * 60)) || 0; 
+
+    // REAL RANKING
+    const usersAhead = await this.prisma.user.count({
+      where: { xp: { gt: user.xp } }
+    });
+    const totalUsers = await this.prisma.user.count();
+    
+    const rankPosition = usersAhead + 1;
+    let topPercent = Math.round((rankPosition / totalUsers) * 100);
+    if (topPercent === 0) topPercent = 1; 
+    
+    let indexStatus = { text: "REGULAR", color: "#F5C518", bg: "bg-[#F5C518]" };
+    if (precision >= 85) indexStatus = { text: "ELITE", color: "#3ADB6E", bg: "bg-[#3ADB6E]" };
+    else if (precision >= 70) indexStatus = { text: "COMPETITIVO", color: "#3ADB6E", bg: "bg-[#3ADB6E]" };
+    else if (precision < 50) indexStatus = { text: "PERIGO", color: "#EF4444", bg: "bg-[#EF4444]" };
 
     // Fake subjects performance for Home view
     const topSubjects = [
@@ -191,7 +206,9 @@ export class AppController {
     
     return {
       id: user.id,
-      indexAprovaPetro: precision, // Using precision as index for MVP
+      indexAprovaPetro: precision,
+      topPercent,
+      indexStatus,
       xp: user.xp,
       level,
       streak: user.streak,
@@ -251,7 +268,7 @@ export class AppController {
       const found = radar.find(r => r.subject.includes(label) || label.includes(r.subject));
       return {
         subject: label,
-        score: found ? found.score : Math.floor(Math.random() * 40) + 20 // Mock value for empty subjects
+        score: found ? found.score : 0 // Matemática real: 0 para matérias não respondidas
       };
     });
 
