@@ -79,6 +79,7 @@ export default function PerfilPage() {
   const xpProgress = (data.xp % 100); 
   const nextLevelXp = 100;
   
+  const isCustomAvatar = data.avatarId?.startsWith('data:image/');
   const CurrentAvatar = AVATARS.find(a => a.id === (data.avatarId || 'avatar-1')) || AVATARS[0];
   const CurrentAvatarIcon = CurrentAvatar.icon;
 
@@ -87,8 +88,12 @@ export default function PerfilPage() {
       
       {/* HEADER */}
       <header className="px-5 py-4 flex items-center justify-between z-10 sticky top-0 bg-[#0A0F0D]/90 backdrop-blur-sm relative border-b border-zinc-800/50">
-        <div className={`w-10 h-10 rounded-full ${CurrentAvatar.bg} overflow-hidden flex items-center justify-center`}>
-          <CurrentAvatarIcon className="w-6 h-6" style={{ color: CurrentAvatar.color }} />
+        <div className={`w-10 h-10 rounded-full ${isCustomAvatar ? 'bg-zinc-800' : CurrentAvatar.bg} overflow-hidden flex items-center justify-center`}>
+          {isCustomAvatar ? (
+            <img src={data.avatarId} alt="Profile" className="w-full h-full object-cover" />
+          ) : (
+            <CurrentAvatarIcon className="w-6 h-6" style={{ color: CurrentAvatar.color }} />
+          )}
         </div>
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <img src="/logo.png" alt="AprovaPETRO" className="h-14 object-contain" />
@@ -113,9 +118,13 @@ export default function PerfilPage() {
               <motion.div 
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setIsEditing(true)}
-                className={`w-16 h-16 rounded-2xl ${CurrentAvatar.bg} flex items-center justify-center shadow-lg cursor-pointer border border-white/5`}
+                className={`w-16 h-16 rounded-2xl ${isCustomAvatar ? 'bg-zinc-800' : CurrentAvatar.bg} flex items-center justify-center shadow-lg cursor-pointer border border-white/5 overflow-hidden`}
               >
-                <CurrentAvatarIcon className="w-8 h-8" style={{ color: CurrentAvatar.color }} />
+                {isCustomAvatar ? (
+                  <img src={data.avatarId} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <CurrentAvatarIcon className="w-8 h-8" style={{ color: CurrentAvatar.color }} />
+                )}
               </motion.div>
               <div>
                 <h1 className="text-2xl font-bold text-white">{data.name}</h1>
@@ -198,8 +207,8 @@ export default function PerfilPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-3 block">Escolha seu Avatar</label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <label className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-3 block">Escolha seu Avatar ou Envie uma Foto</label>
+                  <div className="grid grid-cols-3 gap-3 mb-4">
                     {AVATARS.map(avatar => {
                       const Icon = avatar.icon;
                       const isSelected = editAvatar === avatar.id;
@@ -219,6 +228,59 @@ export default function PerfilPage() {
                         </motion.button>
                       );
                     })}
+                  </div>
+                  
+                  <div className="relative w-full h-12">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      id="upload-photo"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const img = new Image();
+                          img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 128;
+                            const MAX_HEIGHT = 128;
+                            
+                            let width = img.width;
+                            let height = img.height;
+                            
+                            if (width > height) {
+                              if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                              }
+                            } else {
+                              if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                              }
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            const ctx = canvas.getContext('2d');
+                            ctx?.drawImage(img, 0, 0, width, height);
+                            
+                            // Compress heavily to keep payload small
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                            setEditAvatar(dataUrl);
+                          };
+                          img.src = event.target?.result as string;
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <div className="w-full h-full bg-[#0A0F0D] border border-zinc-700 rounded-xl flex items-center justify-center text-sm font-bold text-zinc-300 hover:bg-[#111C22] transition-colors">
+                      {editAvatar.startsWith('data:image/') ? 'FOTO CARREGADA ✔️' : '📸 ENVIAR MINHA FOTO'}
+                    </div>
                   </div>
                 </div>
 

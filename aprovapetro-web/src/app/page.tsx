@@ -65,6 +65,7 @@ const AVATARS = [
 
   if (!data) return <div className="h-full bg-[#0A0F0D] flex items-center justify-center text-zinc-400">Carregando painel...</div>;
 
+  const isCustomAvatar = data.avatarId?.startsWith('data:image/');
   const CurrentAvatar = AVATARS.find(a => a.id === (data.avatarId || 'avatar-1')) || AVATARS[0];
   const CurrentAvatarIcon = CurrentAvatar.icon;
 
@@ -91,8 +92,12 @@ const AVATARS = [
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="px-5 py-4 flex items-center justify-between z-10 sticky top-0 bg-[#0A0F0D]/80 backdrop-blur-md relative border-b border-zinc-800/50"
       >
-        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className={`w-10 h-10 rounded-full ${CurrentAvatar.bg} overflow-hidden flex items-center justify-center`}>
-          <CurrentAvatarIcon className="w-6 h-6" style={{ color: CurrentAvatar.color }} />
+        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className={`w-10 h-10 rounded-full ${isCustomAvatar ? 'bg-zinc-800' : CurrentAvatar.bg} overflow-hidden flex items-center justify-center`}>
+          {isCustomAvatar ? (
+            <img src={data.avatarId} alt="Profile" className="w-full h-full object-cover" />
+          ) : (
+            <CurrentAvatarIcon className="w-6 h-6" style={{ color: CurrentAvatar.color }} />
+          )}
         </motion.div>
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <img src="/logo.png" alt="AprovaPETRO" className="h-14 object-contain" />
