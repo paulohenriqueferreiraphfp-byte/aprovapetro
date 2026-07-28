@@ -9,9 +9,9 @@ async function bootstrap() {
   // 1. Helmet Security Headers
   app.use(helmet());
   
-  // 2. Strict CORS
+  // 2. Strict CORS (Hardcoded to bypass env issues)
   app.enableCors({
-    origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL, 'http://localhost:3000'] : ['http://localhost:3000'],
+    origin: ['https://aprovapetro.vercel.app', 'http://localhost:3000'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
