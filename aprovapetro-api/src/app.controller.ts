@@ -160,7 +160,10 @@ export class AppController {
   async getDashboard(@Query('userId') userId: string) {
     const user = await this.prisma.user.findFirst({
       where: userId ? { id: userId } : undefined,
-      include: { missions: { orderBy: { date: 'desc' }, take: 1 } }
+      include: { 
+        missions: { orderBy: { date: 'desc' }, take: 1 },
+        cargo: true
+      }
     });
     if (!user) return {};
     
@@ -193,6 +196,7 @@ export class AppController {
       level,
       streak: user.streak,
       name: user.name,
+      cargoName: user.cargo?.name || "Aluno PETRO",
       avatarId: user.avatarId,
       stats: { totalQuestions, hours, precision },
 
