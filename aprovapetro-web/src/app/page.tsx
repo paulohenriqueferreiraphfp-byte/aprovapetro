@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Target, BookOpen, BrainCircuit, Bot, User, Clock, CheckCircle2, ChevronRight, Trophy } from 'lucide-react';
+import { Flame, Target, BookOpen, BrainCircuit, Bot, User, Clock, CheckCircle2, ChevronRight, Trophy, Zap, Shield } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -76,7 +76,7 @@ const AVATARS = [
     }
   };
 
-  const itemVariants = {
+  const itemVariants: any = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };
