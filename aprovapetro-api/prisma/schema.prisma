@@ -130,3 +130,9 @@ model UserAnswer {
   user            User     @relation(fields: [userId], references: [id])
   question        Question @relation(fields: [questionId], references: [id])
 }
+
+model AllowedEmail {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}

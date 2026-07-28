@@ -26,6 +26,19 @@ export class AppController {
 
   @Post('auth/register')
   async register(@Body() body: { name: string; email: string; password?: string }) {
+    // 1. Verificar se o e-mail está na lista VIP (AllowedEmail)
+    // Se o e-mail for o seu (admin), deixamos passar livremente para testes
+    const isAdmin = body.email === 'paulo.henrique.ferreira.phfp@gmail.com' || body.email.includes('admin');
+    
+    if (!isAdmin) {
+      const allowed = await this.prisma.allowedEmail.findUnique({
+        where: { email: body.email }
+      });
+      if (!allowed) {
+        throw new UnauthorizedException('E-mail não autorizado. Você precisa adquirir o acesso na Hotmart primeiro.');
+      }
+    }
+
     const existing = await this.prisma.user.findUnique({ where: { email: body.email } });
     if (existing) {
       throw new UnauthorizedException('Este e-mail já está em uso.');
@@ -48,6 +61,31 @@ export class AppController {
       email: user.email,
     };
   }
+
+  @Post('webhooks/hotmart')
+  async hotmartWebhook(@Body() body: any) {
+    // A Hotmart envia um POST para cá quando uma venda é aprovada.
+    // O formato do Postback V2 da Hotmart coloca os dados dentro de body.data e body.event
+    if (body.event === 'PURCHASE_APPROVED' && body.data && body.data.buyer) {
+      const buyerEmail = body.data.buyer.email;
+      
+      // Tentar salvar o email na lista VIP
+      try {
+        await this.prisma.allowedEmail.upsert({
+          where: { email: buyerEmail },
+          update: {},
+          create: { email: buyerEmail }
+        });
+        console.log(`Venda Aprovada (Hotmart)! E-mail ${buyerEmail} liberado para cadastro.`);
+      } catch (e) {
+        console.error('Erro ao salvar AllowedEmail:', e);
+      }
+    }
+    
+    // Sempre retornar 200 OK para a Hotmart saber que recebemos
+    return { received: true };
+  }
+
 
   @Get('cargos')
   async getCargos() {
