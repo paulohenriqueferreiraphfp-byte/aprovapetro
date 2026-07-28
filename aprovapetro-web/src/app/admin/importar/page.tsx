@@ -20,7 +20,7 @@ export default function AdminImport() {
       // Validate JSON
       const parsedData = JSON.parse(jsonText);
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/admin/questions/import`, {
+      const res = await fetch(`https://aprovapetro.onrender.com/api/admin/questions/import`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ questions: Array.isArray(parsedData) ? parsedData : [parsedData] })

@@ -14,12 +14,12 @@ export default function MissaoPage() {
     const u = JSON.parse(localStorage.getItem('user') || '{}');
     if (!u.userId) return;
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/stats/radar?userId=${u.userId}`)
+    fetch(`https://aprovapetro.onrender.com/api/stats/radar?userId=${u.userId}`)
       .then(res => res.json())
       .then(setRadarData)
       .catch(console.error);
       
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/stats/diagnostics?userId=${u.userId}`)
+    fetch(`https://aprovapetro.onrender.com/api/stats/diagnostics?userId=${u.userId}`)
       .then(res => res.json())
       .then(setDiagnostics)
       .catch(console.error);

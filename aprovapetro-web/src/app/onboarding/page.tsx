@@ -18,7 +18,7 @@ export default function Onboarding() {
     }
     setUser(u);
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/cargos`)
+    fetch(`https://aprovapetro.onrender.com/api/cargos`)
       .then(res => res.json())
       .then(setCargos)
       .catch(console.error);
@@ -27,7 +27,7 @@ export default function Onboarding() {
   const handleFinish = async () => {
     if (!selectedCargo || !user) return;
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/onboarding`, {
+      await fetch(`https://aprovapetro.onrender.com/api/onboarding`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.userId, cargoId: selectedCargo })

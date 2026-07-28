@@ -15,7 +15,7 @@ export default function FlashcardsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/questions`)
+    fetch(`https://aprovapetro.onrender.com/api/questions`)
       .then(res => res.json())
       .then(data => {
         if (data && data.length > 0) {

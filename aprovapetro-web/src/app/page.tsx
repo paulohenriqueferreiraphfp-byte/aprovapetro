@@ -44,7 +44,7 @@ export default function Home() {
       return;
     }
 
-    const url = new URL(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/dashboard`);
+    const url = new URL(`https://aprovapetro.onrender.com/api/dashboard`);
     if (u.userId) url.searchParams.append('userId', u.userId);
     
     fetch(url.toString())

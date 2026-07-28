@@ -19,7 +19,7 @@ export default function PerfilPage() {
       return;
     }
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/dashboard?userId=${u.userId}`)
+    fetch(`https://aprovapetro.onrender.com/api/dashboard?userId=${u.userId}`)
       .then(res => res.json())
       .then(setData)
       .catch(console.error);
@@ -91,7 +91,7 @@ export default function PerfilPage() {
               className="bg-[#F5C518] hover:bg-[#F5C518]/90 text-black font-bold whitespace-nowrap shadow-[0_0_20px_rgba(245,197,24,0.3)]"
               onClick={async () => {
                 try {
-                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/checkout/create-preference`, {
+                  const res = await fetch(`https://aprovapetro.onrender.com/checkout/create-preference`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ planId: 'vip_mensal', userId: data.id })

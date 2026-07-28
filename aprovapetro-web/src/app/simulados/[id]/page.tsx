@@ -28,7 +28,7 @@ export default function SimuladoPlayer() {
       return;
     }
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/simulados/${id}/start`, {
+    fetch(`https://aprovapetro.onrender.com/api/simulados/${id}/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: u.userId })
@@ -56,7 +56,7 @@ export default function SimuladoPlayer() {
 
   const finishSimulado = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/simulados/finish`, {
+      const res = await fetch(`https://aprovapetro.onrender.com/api/simulados/finish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ attemptId, answers })

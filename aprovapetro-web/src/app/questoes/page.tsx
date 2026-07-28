@@ -15,7 +15,7 @@ export default function QuestionsPlayer() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const subjectId = params.get('subjectId');
-    const url = subjectId ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/questions?subjectId=${subjectId}` : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/questions`;
+    const url = subjectId ? `https://aprovapetro.onrender.com/api/questions?subjectId=${subjectId}` : `https://aprovapetro.onrender.com/api/questions`;
     
     fetch(url)
       .then(res => res.json())
@@ -29,7 +29,7 @@ export default function QuestionsPlayer() {
     const u = JSON.parse(localStorage.getItem('user') || '{}');
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/answers`, {
+      const res = await fetch(`https://aprovapetro.onrender.com/api/answers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

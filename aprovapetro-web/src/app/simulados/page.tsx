@@ -19,7 +19,7 @@ export default function SimuladosList() {
       return;
     }
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/simulados`)
+    fetch(`https://aprovapetro.onrender.com/api/simulados`)
       .then(res => res.json())
       .then(setSimulados)
       .catch(console.error);
