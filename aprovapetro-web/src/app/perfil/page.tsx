@@ -128,7 +128,7 @@ export default function PerfilPage() {
               </motion.div>
               <div>
                 <h1 className="text-2xl font-bold text-white">{data.name}</h1>
-                <p className="text-[#3ADB6E] text-sm mt-1 font-medium">Engenheiro Sênior</p>
+                <p className="text-[#3ADB6E] text-sm mt-1 font-medium">{data.cargoName}</p>
               </div>
             </div>
           </div>
