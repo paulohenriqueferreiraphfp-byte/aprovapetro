@@ -355,9 +355,28 @@ const AVATARS = [
               
               <Trophy className="w-16 h-16 text-[#F5C518] mx-auto mb-4" />
               <h2 className="text-2xl font-black text-white mb-2 uppercase">Ranking Global</h2>
-              <p className="text-zinc-400 text-sm mb-6">
+              <p className="text-zinc-400 text-sm mb-4">
                 Você está no <strong className="text-[#3ADB6E]">Top {data.topPercent}%</strong> de todos os usuários do AprovaPETRO.
               </p>
+
+              {data.topPercent > 50 && (
+                <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl mb-6">
+                  <p className="text-sm font-bold text-red-400">⚠️ ALERTA VERMELHO</p>
+                  <p className="text-xs text-red-300 mt-1">Você está sendo engolido pela concorrência. Se a prova fosse hoje, você ficaria de fora. Está na hora de dobrar a sua carga de estudos e focar nas suas piores matérias. Acorde!</p>
+                </div>
+              )}
+              {data.topPercent <= 50 && data.topPercent > 20 && (
+                <div className="bg-[#F5C518]/10 border border-[#F5C518]/30 p-4 rounded-xl mb-6">
+                  <p className="text-sm font-bold text-[#F5C518]">⚡ ZONA DE ATENÇÃO</p>
+                  <p className="text-xs text-[#F5C518]/80 mt-1">Você está no caminho certo e tem chances, mas a Petrobras exige a elite. Aumente o ritmo de resolução de questões para cravar o seu nome no Diário Oficial.</p>
+                </div>
+              )}
+              {data.topPercent <= 20 && (
+                <div className="bg-[#3ADB6E]/10 border border-[#3ADB6E]/30 p-4 rounded-xl mb-6">
+                  <p className="text-sm font-bold text-[#3ADB6E]">🔥 DESEMPENHO DE ELITE</p>
+                  <p className="text-xs text-[#3ADB6E]/80 mt-1">Sua consistência está implacável. Você já tem o nível técnico para passar, agora é manter a máquina aquecida e a ansiedade sob controle. A vaga é sua!</p>
+                </div>
+              )}
               
               <div className="bg-[#0A0F0D] p-4 rounded-xl border border-zinc-800 mb-6">
                 <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold mb-1">Seu XP Atual</p>
