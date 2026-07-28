@@ -27,6 +27,7 @@ export class AppController {
       isOnboarded: !!user.cargoId,
       name: user.name,
       email: user.email,
+      avatarId: user.avatarId,
     };
   }
 
@@ -60,6 +61,7 @@ export class AppController {
         indexAprovaPetro: 0,
         xp: 0,
         sessionId: newSessionId,
+        avatarId: 'avatar-1',
       }
     });
 
@@ -69,6 +71,7 @@ export class AppController {
       isOnboarded: false,
       name: user.name,
       email: user.email,
+      avatarId: user.avatarId,
     };
   }
 
@@ -87,7 +90,6 @@ export class AppController {
     
     return { isValid: true };
   }
-
 
   @Post('webhooks/hotmart')
   async hotmartWebhook(@Body() body: any) {
@@ -142,6 +144,18 @@ export class AppController {
     return { success: true, missionId: mission.id };
   }
 
+  @Post('users/:id')
+  async updateUser(@Param('id') id: string, @Body() body: { name?: string, avatarId?: string }) {
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: {
+        name: body.name,
+        avatarId: body.avatarId
+      }
+    });
+    return { success: true, name: user.name, avatarId: user.avatarId };
+  }
+
   @Get('dashboard')
   async getDashboard(@Query('userId') userId: string) {
     const user = await this.prisma.user.findFirst({
@@ -173,12 +187,15 @@ export class AppController {
     const level = Math.floor(user.xp / 100) + 1;
     
     return {
+      id: user.id,
       indexAprovaPetro: precision, // Using precision as index for MVP
       xp: user.xp,
       level,
       streak: user.streak,
       name: user.name,
+      avatarId: user.avatarId,
       stats: { totalQuestions, hours, precision },
+
       topSubjects,
       mission: mission ? {
         id: mission.id,
