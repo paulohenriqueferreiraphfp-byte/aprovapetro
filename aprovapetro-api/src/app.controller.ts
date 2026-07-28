@@ -12,12 +12,18 @@ export class AppController {
       where: { email: body.email }
     });
     
-    // Simplification for MVP: We check if user exists. We are not checking password hashes right now for speed,
-    // but in a real app, we'd do: bcrypt.compareSync(body.password, user.passwordHash)
     if (!user) throw new UnauthorizedException('E-mail ou senha incorretos.');
+    
+    // Gerar nova sessão (derruba as antigas)
+    const newSessionId = require('crypto').randomUUID();
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { sessionId: newSessionId }
+    });
     
     return {
       userId: user.id,
+      sessionId: newSessionId,
       isOnboarded: !!user.cargoId,
       name: user.name,
       email: user.email,
@@ -44,6 +50,8 @@ export class AppController {
       throw new UnauthorizedException('Este e-mail já está em uso.');
     }
 
+    const newSessionId = require('crypto').randomUUID();
+
     const user = await this.prisma.user.create({
       data: {
         name: body.name,
@@ -51,16 +59,35 @@ export class AppController {
         passwordHash: 'hashed_pw', // Mock hash
         indexAprovaPetro: 0,
         xp: 0,
+        sessionId: newSessionId,
       }
     });
 
     return {
       userId: user.id,
+      sessionId: newSessionId,
       isOnboarded: false,
       name: user.name,
       email: user.email,
     };
   }
+
+  @Get('auth/check-session')
+  async checkSession(@Query('userId') userId: string, @Query('sessionId') sessionId: string) {
+    if (!userId || !sessionId) return { isValid: false };
+    
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { sessionId: true }
+    });
+
+    if (!user || user.sessionId !== sessionId) {
+      return { isValid: false };
+    }
+    
+    return { isValid: true };
+  }
+
 
   @Post('webhooks/hotmart')
   async hotmartWebhook(@Body() body: any) {
