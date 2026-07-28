@@ -54,7 +54,19 @@ export default function Home() {
       .catch(console.error);
   }, [router]);
 
+const AVATARS = [
+  { id: 'avatar-1', icon: User, color: '#3ADB6E', bg: 'bg-[#3ADB6E]/20' },
+  { id: 'avatar-2', icon: Bot, color: '#F5C518', bg: 'bg-[#F5C518]/20' },
+  { id: 'avatar-3', icon: Zap, color: '#EF4444', bg: 'bg-[#EF4444]/20' },
+  { id: 'avatar-4', icon: Shield, color: '#3B82F6', bg: 'bg-[#3B82F6]/20' },
+  { id: 'avatar-5', icon: BrainCircuit, color: '#A855F7', bg: 'bg-[#A855F7]/20' },
+  { id: 'avatar-6', icon: Flame, color: '#FF8A65', bg: 'bg-[#FF8A65]/20' },
+];
+
   if (!data) return <div className="h-full bg-[#0A0F0D] flex items-center justify-center text-zinc-400">Carregando painel...</div>;
+
+  const CurrentAvatar = AVATARS.find(a => a.id === (data.avatarId || 'avatar-1')) || AVATARS[0];
+  const CurrentAvatarIcon = CurrentAvatar.icon;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -79,8 +91,8 @@ export default function Home() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="px-5 py-4 flex items-center justify-between z-10 sticky top-0 bg-[#0A0F0D]/80 backdrop-blur-md relative border-b border-zinc-800/50"
       >
-        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden flex items-center justify-center">
-          <User className="w-6 h-6 text-zinc-400" />
+        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className={`w-10 h-10 rounded-full ${CurrentAvatar.bg} overflow-hidden flex items-center justify-center`}>
+          <CurrentAvatarIcon className="w-6 h-6" style={{ color: CurrentAvatar.color }} />
         </motion.div>
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <img src="/logo.png" alt="AprovaPETRO" className="h-14 object-contain" />
