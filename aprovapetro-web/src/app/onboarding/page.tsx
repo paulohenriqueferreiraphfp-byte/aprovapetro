@@ -9,6 +9,7 @@ export default function Onboarding() {
   const [selectedCargo, setSelectedCargo] = useState<string | null>(null);
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem('user') || 'null');
@@ -24,20 +25,27 @@ export default function Onboarding() {
       .catch(console.error);
   }, [router]);
 
-  const handleFinish = async () => {
-    if (!selectedCargo || !user) return;
+  const handleFinish = async (cargoId: string = selectedCargo as string) => {
+    if (!cargoId || !user) return;
+    setIsLoading(true);
     try {
-      await fetch(`https://aprovapetro.onrender.com/api/onboarding`, {
+      const res = await fetch(`https://aprovapetro.onrender.com/api/onboarding`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.userId, cargoId: selectedCargo })
+        body: JSON.stringify({ userId: user.userId, cargoId })
       });
       
+      if (!res.ok) {
+        throw new Error('Erro na resposta do servidor');
+      }
+
       const updatedUser = { ...user, isOnboarded: true };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       router.push('/');
     } catch (e) {
       console.error(e);
+      alert('Tivemos um problema ao conectar com o servidor. Por favor, tente novamente!');
+      setIsLoading(false);
     }
   };
 
@@ -54,7 +62,10 @@ export default function Onboarding() {
               className={`cursor-pointer border-2 bg-[#18181B] hover:bg-zinc-800 transition-all ${
                 selectedCargo === cargo.id ? 'border-[#00B37E] bg-[#00B37E]/10' : 'border-zinc-800'
               }`}
-              onClick={() => setSelectedCargo(cargo.id)}
+              onClick={() => {
+                setSelectedCargo(cargo.id);
+              }}
+              onDoubleClick={() => handleFinish(cargo.id)}
             >
               <CardContent className="p-6">
                 <h3 className={`font-bold text-xl mb-2 ${selectedCargo === cargo.id ? 'text-[#00B37E]' : 'text-white'}`}>{cargo.name}</h3>
@@ -66,11 +77,11 @@ export default function Onboarding() {
 
         <div className="flex justify-center">
           <Button 
-            onClick={handleFinish} 
-            disabled={!selectedCargo}
+            onClick={() => handleFinish()} 
+            disabled={!selectedCargo || isLoading}
             className="w-full max-w-md bg-[#00B37E] hover:bg-[#009266] py-8 text-xl font-bold rounded-xl shadow-[0_0_20px_rgba(0,179,126,0.4)] disabled:opacity-50 disabled:shadow-none"
           >
-            GERAR MEU PLANO DE ESTUDOS
+            {isLoading ? 'GERANDO PLANO...' : 'GERAR MEU PLANO DE ESTUDOS'}
           </Button>
         </div>
       </div>
