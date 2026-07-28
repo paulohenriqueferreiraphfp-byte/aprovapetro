@@ -256,6 +256,11 @@ export class AppController {
       }
     });
 
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { cargo: true }
+    });
+
     const subjectStats: Record<string, { total: number; correct: number }> = {};
     
     answers.forEach(ans => {
@@ -273,7 +278,20 @@ export class AppController {
     }));
 
     // Ensure we always have 6 points for the hexagon radar
-    const defaultLabels = ['Português', 'Matemática', 'Legislação', 'NR-10', 'Específicas', 'Inglês'];
+    let defaultLabels = ['Português', 'Matemática', 'Legislação', 'NR-10', 'Específicas', 'Inglês'];
+    
+    if (user?.cargo?.name) {
+      if (user.cargo.name.includes('Segurança')) {
+        defaultLabels = ['Português', 'Matemática', 'NR-10', 'NRs', 'Higiene', 'Prevenção'];
+      } else if (user.cargo.name.includes('Eletrotécnica')) {
+        defaultLabels = ['Português', 'Matemática', 'NR-10', 'Circuitos', 'Máquinas Elét.', 'Instalações'];
+      } else if (user.cargo.name.includes('Mecânica')) {
+        defaultLabels = ['Português', 'Matemática', 'Termodinâmica', 'Fluidos', 'Metrologia', 'Resistência'];
+      } else if (user.cargo.name.includes('Operação')) {
+        defaultLabels = ['Português', 'Matemática', 'Química', 'Física', 'Instrumentação', 'Equipamentos'];
+      }
+    }
+
     const finalRadar = defaultLabels.map(label => {
       const found = radar.find(r => r.subject.includes(label) || label.includes(r.subject));
       return {
