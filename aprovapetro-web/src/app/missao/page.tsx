@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User, Bot, Lightbulb, Activity } from 'lucide-react';
@@ -8,6 +9,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { TopHeader } from '@/components/TopHeader';
 
 export default function MissaoPage() {
+  const router = useRouter();
   const [radarData, setRadarData] = useState<any[]>([]);
   const [diagnostics, setDiagnostics] = useState<any[]>([]);
 
@@ -127,7 +129,16 @@ export default function MissaoPage() {
               ))}
             </div>
 
-            <Button className="w-full bg-[#00A35C] hover:bg-[#3ADB6E] text-white font-bold py-6 rounded-xl">
+            <Button 
+              onClick={() => {
+                if (diagnostics.length > 0 && diagnostics[0].subjectId) {
+                  router.push(`/questoes?subjectId=${diagnostics[0].subjectId}`);
+                } else {
+                  router.push(`/questoes`);
+                }
+              }}
+              className="w-full bg-[#00A35C] hover:bg-[#3ADB6E] text-white font-bold py-6 rounded-xl"
+            >
               GERAR TREINO DE RECUPERAÇÃO
             </Button>
           </CardContent>
