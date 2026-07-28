@@ -194,6 +194,15 @@ export class AppController {
     else if (precision >= 70) indexStatus = { text: "COMPETITIVO", color: "#3ADB6E", bg: "bg-[#3ADB6E]" };
     else if (precision < 50) indexStatus = { text: "PERIGO", color: "#EF4444", bg: "bg-[#EF4444]" };
 
+    let rankMessage = `Você está no Top ${topPercent}%`;
+    if (totalQuestions === 0) {
+      rankMessage = "Aviso: Faça o Nivelamento Urgente!";
+    } else if (precision < 50) {
+      rankMessage = "Alerta: Você está abaixo da média. Treine mais!";
+    } else if (precision < 70) {
+      rankMessage = `Atenção: Acelere o ritmo! (Top ${topPercent}%)`;
+    }
+
     // Fake subjects performance for Home view
     const topSubjects = [
       { name: "Segurança do Trabalho", percentage: 92, status: "Bom", color: "#3ADB6E" },
@@ -208,6 +217,7 @@ export class AppController {
       id: user.id,
       indexAprovaPetro: precision,
       topPercent,
+      rankMessage,
       indexStatus,
       xp: user.xp,
       level,
