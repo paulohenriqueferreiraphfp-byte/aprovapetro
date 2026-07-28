@@ -272,8 +272,8 @@ const AVATARS = [
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-400 font-medium">Total Horas</p>
-                  <p className="font-bold text-lg text-white">{data.stats?.hours}h</p>
+                  <p className="text-xs text-zinc-400 font-medium">Tempo de Estudo</p>
+                  <p className="font-bold text-lg text-white">{data.stats?.timeFormatted || '0m'}</p>
                 </div>
               </CardContent>
             </Card>

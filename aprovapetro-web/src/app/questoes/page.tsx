@@ -12,6 +12,7 @@ export default function QuestionsPlayer() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<any>(null);
+  const [startTime, setStartTime] = useState<number>(Date.now());
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -20,7 +21,10 @@ export default function QuestionsPlayer() {
     
     fetch(url)
       .then(res => res.json())
-      .then(setQuestions)
+      .then(d => {
+        setQuestions(d);
+        setStartTime(Date.now());
+      })
       .catch(console.error);
   }, []);
 
@@ -28,6 +32,7 @@ export default function QuestionsPlayer() {
     if (selectedOption === null) return;
     const currentQ = questions[currentIndex];
     const u = JSON.parse(localStorage.getItem('user') || '{}');
+    const timeSpentMs = Date.now() - startTime;
     
     try {
       const res = await fetch(`https://aprovapetro.onrender.com/api/answers`, {
@@ -37,7 +42,7 @@ export default function QuestionsPlayer() {
           userId: u.userId,
           questionId: currentQ.id,
           optionIndex: selectedOption,
-          timeSpentMs: 15000,
+          timeSpentMs,
         })
       });
       const data = await res.json();
@@ -50,6 +55,7 @@ export default function QuestionsPlayer() {
   const nextQuestion = () => {
     setFeedback(null);
     setSelectedOption(null);
+    setStartTime(Date.now());
     setCurrentIndex(prev => Math.min(prev + 1, questions.length - 1));
   };
 
