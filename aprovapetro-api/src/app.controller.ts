@@ -277,11 +277,52 @@ export class AppController {
 
   @Get('stats/diagnostics')
   async getDiagnostics(@Query('userId') userId: string) {
-    // Mock diagnostics for MVP based on real structure
-    return [
-      { subject: "Instalações Elétricas", drop: 15, msg: "Visto pela última vez há 12 dias. Risco de esquecimento alto.", type: "danger" },
-      { subject: "Regência Verbal", drop: 8, msg: "Dificuldade recorrente em questões do tipo CESGRANRIO.", type: "warning" }
-    ];
+    if (!userId) return [];
+    
+    const answers = await this.prisma.userAnswer.findMany({
+      where: { userId },
+      include: {
+        question: { include: { topic: { include: { subject: true } } } }
+      }
+    });
+
+    if (answers.length === 0) {
+      return [
+        { subject: "Nivelamento Geral", subjectId: "", drop: 100, msg: "Você ainda não respondeu questões suficientes. Faça o nivelamento.", type: "danger" }
+      ];
+    }
+
+    const subjectStats: Record<string, { total: number; correct: number; id: string }> = {};
+    
+    answers.forEach(ans => {
+      const subjName = ans.question.topic?.subject?.name || 'Gerais';
+      const subjId = ans.question.topic?.subjectId || '';
+      if (!subjectStats[subjName]) {
+        subjectStats[subjName] = { total: 0, correct: 0, id: subjId };
+      }
+      subjectStats[subjName].total++;
+      if (ans.isCorrect) subjectStats[subjName].correct++;
+    });
+
+    const diagnostics = Object.entries(subjectStats).map(([subject, counts]) => {
+      const score = Math.round((counts.correct / counts.total) * 100);
+      const drop = 100 - score;
+      let type = "warning";
+      if (drop > 50) type = "danger";
+      
+      return {
+        subject,
+        subjectId: counts.id,
+        drop,
+        msg: `Sua precisão atual é de ${score}%. É recomendado um treino de choque nesta área.`,
+        type
+      };
+    });
+
+    // Ordenar pelo maior drop (pior matéria)
+    diagnostics.sort((a, b) => b.drop - a.drop);
+
+    return diagnostics.slice(0, 2);
   }
 
   @Get('subjects')
