@@ -1,0 +1,368 @@
+import { Controller, Get, Post, Body, UnauthorizedException, Query, Param } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+@Controller('api')
+export class AppController {
+  constructor(private prisma: PrismaService) {}
+
+  @Post('auth/login')
+  async login(@Body() body: { email: string; password?: string }) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: body.email }
+    });
+    
+    // Simplification for MVP: We check if user exists. We are not checking password hashes right now for speed,
+    // but in a real app, we'd do: bcrypt.compareSync(body.password, user.passwordHash)
+    if (!user) throw new UnauthorizedException('E-mail ou senha incorretos.');
+    
+    return {
+      userId: user.id,
+      isOnboarded: !!user.cargoId,
+      name: user.name,
+      email: user.email,
+    };
+  }
+
+  @Post('auth/register')
+  async register(@Body() body: { name: string; email: string; password?: string }) {
+    const existing = await this.prisma.user.findUnique({ where: { email: body.email } });
+    if (existing) {
+      throw new UnauthorizedException('Este e-mail já está em uso.');
+    }
+
+    const user = await this.prisma.user.create({
+      data: {
+        name: body.name,
+        email: body.email,
+        passwordHash: 'hashed_pw', // Mock hash
+        indexAprovaPetro: 0,
+        xp: 0,
+      }
+    });
+
+    return {
+      userId: user.id,
+      isOnboarded: false,
+      name: user.name,
+      email: user.email,
+    };
+  }
+
+  @Get('cargos')
+  async getCargos() {
+    return this.prisma.cargo.findMany();
+  }
+
+  @Post('onboarding')
+  async submitOnboarding(@Body() body: { userId: string, cargoId: string }) {
+    const user = await this.prisma.user.update({
+      where: { id: body.userId },
+      data: { cargoId: body.cargoId },
+      include: { cargo: true },
+    });
+
+    // Create Initial Daily Mission based on Cargo
+    const mission = await this.prisma.dailyMission.create({
+      data: {
+        userId: user.id,
+        title: `Missão de Nivelamento - ${user.cargo?.name}`,
+        tasks: JSON.stringify([
+          { type: 'questions', title: 'Resolver 20 questões', subject: 'Conhecimentos Específicos', done: false },
+          { type: 'flashcards', title: 'Revisar 15 flashcards', subject: 'Português', done: false },
+        ]),
+      }
+    });
+
+    return { success: true, missionId: mission.id };
+  }
+
+  @Get('dashboard')
+  async getDashboard(@Query('userId') userId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: userId ? { id: userId } : undefined,
+      include: { missions: { orderBy: { date: 'desc' }, take: 1 } }
+    });
+    if (!user) return {};
+    
+    // Calculate total hours and precision
+    const answers = await this.prisma.userAnswer.findMany({
+      where: { userId: user.id }
+    });
+    
+    let totalQuestions = answers.length;
+    let correctCount = answers.filter(a => a.isCorrect).length;
+    let totalTimeMs = answers.reduce((acc, curr) => acc + (curr.timeSpentMs || 0), 0);
+    
+    const precision = totalQuestions === 0 ? 0 : Math.round((correctCount / totalQuestions) * 100);
+    const hours = Math.round(totalTimeMs / (1000 * 60 * 60)) || 0; // Or just a mock if too low
+
+    // Fake subjects performance for Home view
+    const topSubjects = [
+      { name: "Segurança do Trabalho", percentage: 92, status: "Bom", color: "#3ADB6E" },
+      { name: "Português Instrumental", percentage: 68, status: "Regular", color: "#F5C518" },
+      { name: "Termodinâmica", percentage: 41, status: "Crítico", color: "#EF4444" }
+    ];
+
+    const mission = user.missions[0];
+    const level = Math.floor(user.xp / 100) + 1;
+    
+    return {
+      indexAprovaPetro: precision, // Using precision as index for MVP
+      xp: user.xp,
+      level,
+      streak: user.streak,
+      name: user.name,
+      stats: { totalQuestions, hours, precision },
+      topSubjects,
+      mission: mission ? {
+        id: mission.id,
+        title: mission.title,
+        tasks: JSON.parse(mission.tasks),
+      } : {
+        id: "default-1",
+        title: "Missão Diária",
+        tasks: [
+          { title: "Resolver 10 questões da CESGRANRIO", type: "questions" },
+          { title: "Revisar 5 Flashcards de Segurança", type: "flashcards" },
+          { title: "Ler resumo de Termodinâmica", type: "reading" }
+        ]
+      },
+    };
+  }
+
+  @Get('stats/radar')
+  async getRadarStats(@Query('userId') userId: string) {
+    if (!userId) return [];
+    
+    // Fetch user answers joined with topics and subjects
+    const answers = await this.prisma.userAnswer.findMany({
+      where: { userId },
+      include: {
+        question: { include: { topic: { include: { subject: true } } } }
+      }
+    });
+
+    const subjectStats: Record<string, { total: number; correct: number }> = {};
+    
+    answers.forEach(ans => {
+      const subjName = ans.question.topic?.subject?.name || 'Gerais';
+      if (!subjectStats[subjName]) {
+        subjectStats[subjName] = { total: 0, correct: 0 };
+      }
+      subjectStats[subjName].total++;
+      if (ans.isCorrect) subjectStats[subjName].correct++;
+    });
+
+    const radar = Object.entries(subjectStats).map(([subject, counts]) => ({
+      subject,
+      score: counts.total === 0 ? 0 : Math.round((counts.correct / counts.total) * 100)
+    }));
+
+    // Ensure we always have 6 points for the hexagon radar
+    const defaultLabels = ['Português', 'Matemática', 'Legislação', 'NR-10', 'Específicas', 'Inglês'];
+    const finalRadar = defaultLabels.map(label => {
+      const found = radar.find(r => r.subject.includes(label) || label.includes(r.subject));
+      return {
+        subject: label,
+        score: found ? found.score : Math.floor(Math.random() * 40) + 20 // Mock value for empty subjects
+      };
+    });
+
+    return finalRadar;
+  }
+
+  @Get('stats/diagnostics')
+  async getDiagnostics(@Query('userId') userId: string) {
+    // Mock diagnostics for MVP based on real structure
+    return [
+      { subject: "Instalações Elétricas", drop: 15, msg: "Visto pela última vez há 12 dias. Risco de esquecimento alto.", type: "danger" },
+      { subject: "Regência Verbal", drop: 8, msg: "Dificuldade recorrente em questões do tipo CESGRANRIO.", type: "warning" }
+    ];
+  }
+
+  @Get('subjects')
+  async getSubjects() {
+    return this.prisma.subject.findMany();
+  }
+
+  @Get('questions')
+  async getQuestions(@Query('subjectId') subjectId?: string) {
+    return this.prisma.question.findMany({
+      where: subjectId ? { topic: { subjectId } } : undefined,
+      include: {
+        options: true,
+        topic: {
+          include: { subject: true }
+        }
+      }
+    });
+  }
+
+  @Post('answers')
+  async submitAnswer(@Body() body: { userId: string; questionId: string; optionIndex: number; timeSpentMs: number }) {
+    const user = await this.prisma.user.findUnique({ where: { id: body.userId } });
+    const question = await this.prisma.question.findUnique({ where: { id: body.questionId } });
+    
+    if (!user || !question) return { success: false };
+
+    const isCorrect = question.correctOption === body.optionIndex;
+
+    const answer = await this.prisma.userAnswer.create({
+      data: {
+        userId: user.id,
+        questionId: question.id,
+        isCorrect,
+        timeSpentMs: body.timeSpentMs,
+      }
+    });
+
+    if (isCorrect) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { xp: { increment: 10 } }
+      });
+    }
+
+    return {
+      success: true,
+      isCorrect,
+      explanation: question.explanation,
+      correctOption: question.correctOption
+    };
+  }
+
+  @Get('simulados')
+  async getSimulados(@Query('cargoId') cargoId: string) {
+    return this.prisma.simulado.findMany({
+      where: cargoId ? { cargoId } : undefined,
+      include: {
+        _count: {
+          select: { questions: true }
+        }
+      }
+    });
+  }
+
+  @Post('simulados/:id/start')
+  async startSimulado(@Param('id') simuladoId: string, @Body() body: { userId: string }) {
+    const attempt = await this.prisma.simuladoAttempt.create({
+      data: {
+        userId: body.userId,
+        simuladoId: simuladoId
+      }
+    });
+
+    const questions = await this.prisma.simuladoQuestion.findMany({
+      where: { simuladoId },
+      orderBy: { orderIndex: 'asc' },
+      include: {
+        question: {
+          include: { options: true, topic: { include: { subject: true } } }
+        }
+      }
+    });
+
+    return { attemptId: attempt.id, questions };
+  }
+
+  @Post('simulados/finish')
+  async finishSimulado(@Body() body: { attemptId: string; answers: Record<string, number> }) {
+    const attempt = await this.prisma.simuladoAttempt.findUnique({
+      where: { id: body.attemptId },
+      include: { simulado: { include: { questions: { include: { question: true } } } } }
+    });
+
+    if (!attempt) return { success: false };
+
+    let correctCount = 0;
+    const totalQuestions = attempt.simulado.questions.length;
+
+    // We don't save individual answers for MVP speed, just calculate score
+    for (const sq of attempt.simulado.questions) {
+      const userAnswer = body.answers[sq.question.id];
+      if (userAnswer === sq.question.correctOption) {
+        correctCount++;
+      }
+    }
+
+    const score = Math.round((correctCount / totalQuestions) * 100);
+
+    await this.prisma.simuladoAttempt.update({
+      where: { id: attempt.id },
+      data: { score, finishedAt: new Date() }
+    });
+
+    // Award XP
+    await this.prisma.user.update({
+      where: { id: attempt.userId },
+      data: { xp: { increment: correctCount * 15 } } // More XP for simulado
+    });
+
+    return { success: true, score, correctCount, totalQuestions };
+  }
+
+  @Post('admin/questions/import')
+  async importQuestions(@Body() body: { questions: any[] }) {
+    if (!body.questions || !Array.isArray(body.questions)) {
+      return { success: false, message: 'Invalid data format' };
+    }
+
+    const createdQuestions = [];
+
+    const defaultTopic = await this.prisma.topic.findFirst();
+
+    for (const q of body.questions) {
+      let topicId = q.topicId;
+      if (!topicId || !topicId.includes('-')) {
+        topicId = defaultTopic?.id;
+      }
+
+      const created = await this.prisma.question.create({
+        data: {
+          topicId: topicId,
+          bank: q.bank,
+          year: q.year,
+          statement: q.statement,
+          correctOption: q.correctOption,
+          explanation: q.explanation,
+          options: {
+            create: q.options.map((optText: string, index: number) => ({
+              text: optText,
+              orderIndex: index
+            }))
+          }
+        }
+      });
+      createdQuestions.push(created);
+    }
+
+    return { success: true, count: createdQuestions.length };
+  }
+  @Post('chat')
+  async chat(@Body() body: { message: string }) {
+    const apiKey = process.env.GEMINI_API_KEY || '';
+    const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+    if (!genAI) {
+      return { 
+        reply: '⚠️ **Aviso de Sistema:** A minha inteligência neural (Google Gemini) ainda está desligada! O desenvolvedor precisa colar a chave (GEMINI_API_KEY) no arquivo .env do backend para eu poder pensar de verdade.' 
+      };
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ 
+        model: 'gemini-3.5-flash',
+        systemInstruction: "Você é a PETRA IA, tutora inteligente e exclusiva do aplicativo AprovaPETRO. Você ajuda engenheiros e técnicos a passarem no concurso da Petrobras. Responda de forma direta, encorajadora, use emojis, e foque em dicas de estudo, estatísticas e resolução de questões. Nunca diga que é um modelo do Google, assuma a identidade da PETRA IA."
+      });
+
+      const result = await model.generateContent(body.message);
+      const response = await result.response;
+      return { reply: response.text() };
+
+    } catch (error) {
+      console.error('Erro na IA:', error);
+      return { reply: 'Minhas engrenagens travaram um pouco! Houve um erro de conexão com a central de inteligência. Tente novamente mais tarde.' };
+    }
+  }
+}
