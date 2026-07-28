@@ -180,10 +180,10 @@ const AVATARS = [
               <h3 className="text-sm text-zinc-400 mb-6">AprovaPETRO Index</h3>
               
               <div className="relative w-32 h-32 mb-6">
-                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 drop-shadow-[0_0_10px_rgba(58,219,110,0.3)]">
+                <svg viewBox="0 0 100 100" className={`w-full h-full transform -rotate-90`} style={{ filter: `drop-shadow(0 0 10px ${data.indexStatus?.color}40)` }}>
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#1A2730" strokeWidth="10" />
                   <motion.circle 
-                    cx="50" cy="50" r="45" fill="none" stroke="#3ADB6E" strokeWidth="10" 
+                    cx="50" cy="50" r="45" fill="none" stroke={data.indexStatus?.color || '#3ADB6E'} strokeWidth="10" 
                     strokeDasharray="282.7" 
                     initial={{ strokeDashoffset: 282.7 }}
                     animate={{ strokeDashoffset: 282.7 - (282.7 * data.indexAprovaPetro) / 100 }}
@@ -194,12 +194,16 @@ const AVATARS = [
                   <span className="text-4xl font-extrabold tracking-tighter text-white">
                     {data.indexAprovaPetro}<span className="text-xl">%</span>
                   </span>
-                  <span className="text-[10px] text-[#3ADB6E] font-bold uppercase tracking-widest mt-1 drop-shadow-md">Competitivo</span>
+                  <span style={{ color: data.indexStatus?.color || '#3ADB6E' }} className="text-[10px] font-bold uppercase tracking-widest mt-1 drop-shadow-md">
+                    {data.indexStatus?.text || 'COMPETITIVO'}
+                  </span>
                 </div>
               </div>
 
               <div className="bg-[#0A0F0D] px-4 py-2 rounded-full border border-zinc-800">
-                <span className="text-[#3ADB6E] text-sm font-medium">Você está no Top 15%</span>
+                <span className="text-sm font-medium" style={{ color: data.indexStatus?.color || '#3ADB6E' }}>
+                  Você está no Top {data.topPercent || 100}%
+                </span>
               </div>
             </CardContent>
           </Card>
