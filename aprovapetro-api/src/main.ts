@@ -2,12 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import { json } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   // 1. Helmet Security Headers
   app.use(helmet());
+  app.use(json({ limit: '10mb' }));
   
   // 2. Strict CORS (Hardcoded to bypass env issues)
   app.enableCors({
