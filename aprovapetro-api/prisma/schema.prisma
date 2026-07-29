@@ -36,6 +36,7 @@ model Cargo {
   id          String @id @default(uuid())
   name        String
   description String?
+  level       String @default("TÉCNICO")
   
   users       User[]
   simulados   Simulado[]

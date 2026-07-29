@@ -56,24 +56,46 @@ export default function Onboarding() {
         <h1 className="text-4xl font-bold mb-4 text-center">Qual cargo técnico você deseja focar?</h1>
         <p className="text-zinc-400 mb-10 text-center text-lg">Vamos montar seu plano de estudos diário focado nas disciplinas do seu edital.</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-          {cargos.map(cargo => (
-            <Card 
-              key={cargo.id} 
-              className={`cursor-pointer border-2 bg-[#18181B] hover:bg-zinc-800 transition-all ${
-                selectedCargo === cargo.id ? 'border-[#00B37E] bg-[#00B37E]/10' : 'border-zinc-800'
-              }`}
-              onClick={() => {
-                setSelectedCargo(cargo.id);
-              }}
-              onDoubleClick={() => handleFinish(cargo.id)}
-            >
-              <CardContent className="p-6">
-                <h3 className={`font-bold text-xl mb-2 ${selectedCargo === cargo.id ? 'text-[#00B37E]' : 'text-white'}`}>{cargo.name}</h3>
-                <p className="text-sm text-zinc-400">{cargo.description}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 text-[#00B37E]">Nível Técnico</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {cargos.filter(c => c.level === 'TÉCNICO').map(cargo => (
+              <Card 
+                key={cargo.id} 
+                className={`cursor-pointer border-2 bg-[#18181B] hover:bg-zinc-800 transition-all ${
+                  selectedCargo === cargo.id ? 'border-[#00B37E] bg-[#00B37E]/10' : 'border-zinc-800'
+                }`}
+                onClick={() => setSelectedCargo(cargo.id)}
+                onDoubleClick={() => handleFinish(cargo.id)}
+              >
+                <CardContent className="p-6">
+                  <h3 className={`font-bold text-xl mb-2 ${selectedCargo === cargo.id ? 'text-[#00B37E]' : 'text-white'}`}>{cargo.name}</h3>
+                  <p className="text-sm text-zinc-400">{cargo.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold mb-4 text-[#F59E0B]">Nível Superior</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {cargos.filter(c => c.level === 'SUPERIOR').map(cargo => (
+              <Card 
+                key={cargo.id} 
+                className={`cursor-pointer border-2 bg-[#18181B] hover:bg-zinc-800 transition-all ${
+                  selectedCargo === cargo.id ? 'border-[#F59E0B] bg-[#F59E0B]/10' : 'border-zinc-800'
+                }`}
+                onClick={() => setSelectedCargo(cargo.id)}
+                onDoubleClick={() => handleFinish(cargo.id)}
+              >
+                <CardContent className="p-6">
+                  <h3 className={`font-bold text-xl mb-2 ${selectedCargo === cargo.id ? 'text-[#F59E0B]' : 'text-white'}`}>{cargo.name}</h3>
+                  <p className="text-sm text-zinc-400">{cargo.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         <div className="flex justify-center">
