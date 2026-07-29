@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Flame, Target, BookOpen, BrainCircuit, Bot, User, Clock, CheckCircle2, ChevronRight, Trophy, Zap, Shield, X } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
+import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -103,7 +104,30 @@ const AVATARS = [
   { id: 'avatar-6', icon: Flame, color: '#FF8A65', bg: 'bg-[#FF8A65]/20' },
 ];
 
-  if (!data) return <div className="h-full bg-[#0A0F0D] flex items-center justify-center text-zinc-400">Carregando painel...</div>;
+  if (!data) {
+    return (
+      <div className="h-full bg-[#0A0F0D] flex flex-col relative">
+        <header className="px-5 py-4 flex items-center justify-between border-b border-zinc-800/50">
+          <Skeleton className="w-10 h-10 rounded-full" />
+          <Skeleton className="w-32 h-10" />
+          <Skeleton className="w-10 h-10 rounded-xl" />
+        </header>
+        <div className="p-5 space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <div className="grid grid-cols-2 gap-4">
+            <Skeleton className="h-24 w-full rounded-2xl" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
+            <Skeleton className="col-span-2 h-24 w-full rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const isCustomAvatar = data.avatarId?.startsWith('data:image/');
   const CurrentAvatar = AVATARS.find(a => a.id === (data.avatarId || 'avatar-1')) || AVATARS[0];

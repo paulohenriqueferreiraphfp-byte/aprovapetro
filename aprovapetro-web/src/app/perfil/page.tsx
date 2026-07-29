@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Bot, User, Flame, Calendar, Settings, Shield, Zap, Moon, Lock, Briefcase, X, BrainCircuit } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AVATARS = [
@@ -75,7 +76,21 @@ export default function PerfilPage() {
     }
   };
 
-  if (!data) return <div className="h-full bg-[#0A0F0D] flex items-center justify-center text-white">Carregando Perfil...</div>;
+  if (!data) {
+    return (
+      <div className="h-full bg-[#0A0F0D] flex flex-col relative">
+        <header className="px-5 py-4 flex items-center justify-between border-b border-zinc-800/50">
+          <Skeleton className="w-10 h-10 rounded-full" />
+          <Skeleton className="w-32 h-10" />
+          <Skeleton className="w-10 h-10 rounded-xl" />
+        </header>
+        <div className="p-5 space-y-6 pt-2">
+          <Skeleton className="h-[250px] w-full rounded-3xl" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
 
   const xpProgress = (data.xp % 100); 
   const nextLevelXp = 100;

@@ -8,25 +8,28 @@ import { Button } from '@/components/ui/button';
 import { User, Bot, Lightbulb, Activity } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
 import { TopHeader } from '@/components/TopHeader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MissaoPage() {
   const router = useRouter();
   const [radarData, setRadarData] = useState<any[]>([]);
   const [diagnostics, setDiagnostics] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem('user') || '{}');
     if (!u.userId) return;
 
-    apiFetch(`https://aprovapetro.onrender.com/api/stats/radar?userId=${u.userId}`)
-      .then(res => res.json())
-      .then(setRadarData)
-      .catch(console.error);
-      
-    apiFetch(`https://aprovapetro.onrender.com/api/stats/diagnostics?userId=${u.userId}`)
-      .then(res => res.json())
-      .then(setDiagnostics)
-      .catch(console.error);
+    Promise.all([
+      apiFetch(`https://aprovapetro.onrender.com/api/stats/radar?userId=${u.userId}`).then(r => r.json()),
+      apiFetch(`https://aprovapetro.onrender.com/api/stats/diagnostics?userId=${u.userId}`).then(r => r.json())
+    ])
+    .then(([radar, diag]) => {
+      setRadarData(radar);
+      setDiagnostics(diag);
+      setIsLoading(false);
+    })
+    .catch(console.error);
   }, []);
 
   const calculateRadarPolygon = (data: any[]) => {
@@ -42,6 +45,19 @@ export default function MissaoPage() {
       return `${x},${y}`;
     }).join(' ');
   };
+
+  if (isLoading) {
+    return (
+      <div className="h-full bg-[#0A0F0D] flex flex-col relative">
+        <TopHeader />
+        <div className="p-5 space-y-6">
+          <Skeleton className="h-10 w-2/3" />
+          <Skeleton className="h-[320px] w-full rounded-2xl" />
+          <Skeleton className="h-48 w-full rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full bg-[#0A0F0D] text-white flex flex-col relative pb-20">
