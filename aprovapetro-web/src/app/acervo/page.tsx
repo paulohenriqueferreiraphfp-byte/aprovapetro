@@ -117,7 +117,7 @@ export default function AcervoPage() {
                           <span className="bg-zinc-700 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">{prova.banca}</span>
                           <span className="text-[#3ADB6E] text-[10px] font-bold uppercase">{prova.orgao} • {prova.year}</span>
                         </div>
-                        <h3 className="font-bold text-base leading-tight mb-4">{prova.title}</h3>
+                        <h3 className="font-bold text-base text-white leading-tight mb-4">{prova.title}</h3>
                         
                         <div className="flex gap-2">
                           <Button 
