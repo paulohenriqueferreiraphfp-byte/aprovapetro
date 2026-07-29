@@ -9,12 +9,14 @@ import { User, Bot, Lightbulb, Activity } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
 import { TopHeader } from '@/components/TopHeader';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUserStore } from '@/store/userStore';
 
 export default function MissaoPage() {
   const router = useRouter();
-  const [radarData, setRadarData] = useState<any[]>([]);
-  const [diagnostics, setDiagnostics] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { missaoData, setMissaoData } = useUserStore();
+  const [radarData, setRadarData] = useState<any[]>(missaoData?.radar || []);
+  const [diagnostics, setDiagnostics] = useState<any[]>(missaoData?.diag || []);
+  const [isLoading, setIsLoading] = useState(!missaoData);
 
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem('user') || '{}');
@@ -27,10 +29,11 @@ export default function MissaoPage() {
     .then(([radar, diag]) => {
       setRadarData(radar);
       setDiagnostics(diag);
+      setMissaoData({ radar, diag });
       setIsLoading(false);
     })
     .catch(console.error);
-  }, []);
+  }, [setMissaoData]);
 
   const calculateRadarPolygon = (data: any[]) => {
     if (data.length < 6) return '';

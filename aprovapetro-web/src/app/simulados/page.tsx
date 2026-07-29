@@ -9,9 +9,12 @@ import { Bot, User, Clock, FileText } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
 import { TopHeader } from '@/components/TopHeader';
 import Link from 'next/link';
+import { useUserStore } from '@/store/userStore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SimuladosList() {
-  const [simulados, setSimulados] = useState<any[]>([]);
+  const { simuladosData, setSimuladosData } = useUserStore();
+  const [simulados, setSimulados] = useState<any[]>(simuladosData || []);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,9 +26,12 @@ export default function SimuladosList() {
 
     apiFetch(`https://aprovapetro.onrender.com/api/simulados`)
       .then(res => res.json())
-      .then(setSimulados)
+      .then(data => {
+        setSimulados(data);
+        setSimuladosData(data);
+      })
       .catch(console.error);
-  }, [router]);
+  }, [router, setSimuladosData]);
 
   return (
     <div className="h-full bg-[#0A0F0D] text-white flex flex-col relative pb-20">
@@ -40,6 +46,12 @@ export default function SimuladosList() {
         </header>
 
         <div className="space-y-4">
+          {!simuladosData && simulados.length === 0 && (
+            <>
+              <Skeleton className="h-48 w-full rounded-2xl" />
+              <Skeleton className="h-48 w-full rounded-2xl" />
+            </>
+          )}
           {simulados.map(simulado => (
             <Card key={simulado.id} className="bg-[#111C22] border-zinc-800/50 rounded-2xl flex flex-col">
               <CardContent className="p-5">
