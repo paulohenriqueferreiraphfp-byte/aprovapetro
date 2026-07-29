@@ -680,7 +680,7 @@ let AppController = class AppController {
     }
     async extractQuestions(file, body) {
         if (!file) {
-            throw new Error('Nenhum arquivo enviado.');
+            throw new common_1.BadRequestException('Nenhum arquivo enviado.');
         }
         try {
             const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -790,7 +790,7 @@ let AppController = class AppController {
         }
         catch (error) {
             console.error('Erro ao extrair PDF:', error);
-            throw new Error('Falha ao processar a prova com IA: ' + error.message);
+            throw new common_1.InternalServerErrorException('Falha ao processar a prova com IA: ' + error.message);
         }
     }
 };
