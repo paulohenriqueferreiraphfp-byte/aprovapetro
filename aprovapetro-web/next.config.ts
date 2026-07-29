@@ -2,9 +2,8 @@ import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
-  dest: "public",
-  disable: process.env.NODE_ENV === "development",
-  register: true,
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development' || true, // Force disable PWA for now to kill cache
 });
 
 const nextConfig: NextConfig = {
