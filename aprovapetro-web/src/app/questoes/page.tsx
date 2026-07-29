@@ -171,7 +171,7 @@ export default function QuestionsPlayer() {
         </div>
 
         {/* STATEMENT */}
-        <Card className="bg-[#111C22] border-zinc-800/50 rounded-2xl mb-6">
+        <Card className="bg-[#111C22] border-zinc-800/50 rounded-2xl mb-6 shrink-0">
           <CardContent className="p-5">
             <p 
               className="text-lg leading-relaxed whitespace-pre-wrap font-bold"

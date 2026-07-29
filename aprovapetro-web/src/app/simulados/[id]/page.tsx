@@ -250,7 +250,7 @@ export default function SimuladoPlayer() {
         <div className="max-w-3xl w-full">
           <div className="text-sm text-zinc-500 mb-4">{currentQ.bank} • {currentQ.year} • {currentQ.topic?.subject?.name}</div>
           <p 
-            className="text-xl mb-8 leading-relaxed whitespace-pre-wrap font-bold"
+            className="text-xl mb-8 leading-relaxed whitespace-pre-wrap font-bold shrink-0"
             style={{ color: '#ffffff', minHeight: '40px' }}
           >
             {currentQ.statement || 'Erro: Enunciado não encontrado.'}
