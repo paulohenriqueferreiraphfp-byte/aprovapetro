@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -20,7 +21,7 @@ export default function AdminImport() {
       // Validate JSON
       const parsedData = JSON.parse(jsonText);
       
-      const res = await fetch(`https://aprovapetro.onrender.com/api/admin/questions/import`, {
+      const res = await apiFetch(`https://aprovapetro.onrender.com/api/admin/questions/import`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ questions: Array.isArray(parsedData) ? parsedData : [parsedData] })

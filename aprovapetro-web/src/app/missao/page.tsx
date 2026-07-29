@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,12 +18,12 @@ export default function MissaoPage() {
     const u = JSON.parse(localStorage.getItem('user') || '{}');
     if (!u.userId) return;
 
-    fetch(`https://aprovapetro.onrender.com/api/stats/radar?userId=${u.userId}`)
+    apiFetch(`https://aprovapetro.onrender.com/api/stats/radar?userId=${u.userId}`)
       .then(res => res.json())
       .then(setRadarData)
       .catch(console.error);
       
-    fetch(`https://aprovapetro.onrender.com/api/stats/diagnostics?userId=${u.userId}`)
+    apiFetch(`https://aprovapetro.onrender.com/api/stats/diagnostics?userId=${u.userId}`)
       .then(res => res.json())
       .then(setDiagnostics)
       .catch(console.error);

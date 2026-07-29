@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 
 import { useState } from 'react';
 import { Bot, X, Send } from 'lucide-react';
@@ -20,7 +21,7 @@ export function FloatingChat() {
     setInput('');
     
     try {
-      const res = await fetch(`https://aprovapetro.onrender.com/api/chat`, {
+      const res = await apiFetch(`https://aprovapetro.onrender.com/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: currentInput })

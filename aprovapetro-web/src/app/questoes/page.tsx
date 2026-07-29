@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +20,7 @@ export default function QuestionsPlayer() {
     const subjectId = params.get('subjectId');
     const url = subjectId ? `https://aprovapetro.onrender.com/api/questions?subjectId=${subjectId}` : `https://aprovapetro.onrender.com/api/questions`;
     
-    fetch(url)
+    apiFetch(url)
       .then(res => res.json())
       .then(d => {
         setQuestions(d);
@@ -35,7 +36,7 @@ export default function QuestionsPlayer() {
     const timeSpentMs = Date.now() - startTime;
     
     try {
-      const res = await fetch(`https://aprovapetro.onrender.com/api/answers`, {
+      const res = await apiFetch(`https://aprovapetro.onrender.com/api/answers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

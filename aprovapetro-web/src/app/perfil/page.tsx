@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -34,7 +35,7 @@ export default function PerfilPage() {
       return;
     }
 
-    fetch(`https://aprovapetro.onrender.com/api/dashboard?userId=${u.userId}`)
+    apiFetch(`https://aprovapetro.onrender.com/api/dashboard?userId=${u.userId}`)
       .then(res => res.json())
       .then(d => {
         setData(d);
@@ -49,7 +50,7 @@ export default function PerfilPage() {
     try {
       const u = JSON.parse(localStorage.getItem('user') || 'null');
       
-      const res = await fetch(`https://aprovapetro.onrender.com/api/users/${data.id}`, {
+      const res = await apiFetch(`https://aprovapetro.onrender.com/api/users/${data.id}`, {
         method: 'POST', // Usando POST pois o nestJS tá como POST users/:id
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editName, avatarId: editAvatar })

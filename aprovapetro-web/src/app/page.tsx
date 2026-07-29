@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -58,7 +59,7 @@ export default function Home() {
     const url = new URL(`https://aprovapetro.onrender.com/api/dashboard`);
     if (u.userId) url.searchParams.append('userId', u.userId);
     
-    fetch(url.toString())
+    apiFetch(url.toString())
       .then(res => res.json())
       .then(d => {
         setData(d);
@@ -73,7 +74,7 @@ export default function Home() {
     setIsSavingDate(true);
     try {
       const u = JSON.parse(localStorage.getItem('user') || 'null');
-      const res = await fetch(`https://aprovapetro.onrender.com/api/users/${data.id}`, {
+      const res = await apiFetch(`https://aprovapetro.onrender.com/api/users/${data.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ examDate: editExamDate })
@@ -81,7 +82,7 @@ export default function Home() {
       if (res.ok) {
         const url = new URL(`https://aprovapetro.onrender.com/api/dashboard`);
         if (u.userId) url.searchParams.append('userId', u.userId);
-        const newData = await fetch(url.toString()).then(r => r.json());
+        const newData = await apiFetch(url.toString()).then(r => r.json());
         setData(newData);
         setShowDateModal(false);
       }

@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,7 +21,7 @@ export default function SimuladosList() {
       return;
     }
 
-    fetch(`https://aprovapetro.onrender.com/api/simulados`)
+    apiFetch(`https://aprovapetro.onrender.com/api/simulados`)
       .then(res => res.json())
       .then(setSimulados)
       .catch(console.error);

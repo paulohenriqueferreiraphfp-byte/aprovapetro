@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -26,7 +27,7 @@ export function SessionGuard() {
           return;
         }
 
-        const res = await fetch(`https://aprovapetro.onrender.com/api/auth/check-session?userId=${user.userId}&sessionId=${user.sessionId}`);
+        const res = await apiFetch(`https://aprovapetro.onrender.com/api/auth/check-session?userId=${user.userId}&sessionId=${user.sessionId}`);
         const data = await res.json();
 
         if (!data.isValid) {

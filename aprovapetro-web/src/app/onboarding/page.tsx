@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +20,7 @@ export default function Onboarding() {
     }
     setUser(u);
 
-    fetch(`https://aprovapetro.onrender.com/api/cargos`)
+    apiFetch(`https://aprovapetro.onrender.com/api/cargos`)
       .then(res => res.json())
       .then(setCargos)
       .catch(console.error);
@@ -29,7 +30,7 @@ export default function Onboarding() {
     if (!cargoId || !user) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`https://aprovapetro.onrender.com/api/onboarding`, {
+      const res = await apiFetch(`https://aprovapetro.onrender.com/api/onboarding`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.userId, cargoId })

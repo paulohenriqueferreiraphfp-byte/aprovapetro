@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '@/lib/api';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,7 +16,7 @@ export default function FlashcardsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`https://aprovapetro.onrender.com/api/questions`)
+    apiFetch(`https://aprovapetro.onrender.com/api/questions`)
       .then(res => res.json())
       .then(data => {
         if (data && data.length > 0) {
