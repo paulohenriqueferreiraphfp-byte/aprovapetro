@@ -249,7 +249,7 @@ export default function SimuladoPlayer() {
       <main className="flex-1 overflow-auto p-8 flex justify-center">
         <div className="max-w-3xl w-full">
           <div className="text-sm text-zinc-500 mb-4">{currentQ.bank} • {currentQ.year} • {currentQ.topic?.subject?.name}</div>
-          <p className="text-xl mb-8 leading-relaxed">{currentQ.statement}</p>
+          <p className="text-xl mb-8 leading-relaxed whitespace-pre-wrap">{currentQ.statement}</p>
           
           <div className="space-y-4">
             {currentQ.options.map((opt: any) => {

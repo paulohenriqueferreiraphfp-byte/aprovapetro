@@ -9,10 +9,12 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async () => {
     setError('');
+    setIsLoading(true);
     try {
       const res = await fetch(`https://aprovapetro.onrender.com/api/auth/login`, {
         method: 'POST',
@@ -30,10 +32,12 @@ export default function Login() {
         }
       } else {
         setError(data.message || 'E-mail ou senha incorretos.');
+        setIsLoading(false);
       }
     } catch (e) {
       console.error(e);
       setError('Erro de conexão com o servidor.');
+      setIsLoading(false);
     }
   };
 
@@ -61,8 +65,12 @@ export default function Login() {
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
-          <Button onClick={handleLogin} className="w-full bg-[#00B37E] hover:bg-[#009266] py-6 text-lg rounded-xl shadow-[0_0_15px_rgba(0,179,126,0.3)]">
-            ENTRAR
+          <Button 
+            onClick={handleLogin} 
+            disabled={isLoading}
+            className="w-full bg-[#00B37E] hover:bg-[#009266] py-6 text-lg rounded-xl shadow-[0_0_15px_rgba(0,179,126,0.3)] disabled:opacity-50 disabled:shadow-none"
+          >
+            {isLoading ? 'ENTRANDO...' : 'ENTRAR'}
           </Button>
 
           <p className="text-center text-sm text-zinc-400 mt-4">
