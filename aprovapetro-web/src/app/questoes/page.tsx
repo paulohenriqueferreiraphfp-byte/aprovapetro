@@ -15,6 +15,10 @@ export default function QuestionsPlayer() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<any>(null);
   const [startTime, setStartTime] = useState<number>(() => Date.now());
+  
+  // States for the results screen
+  const [isFinished, setIsFinished] = useState(false);
+  const [sessionStats, setSessionStats] = useState<Record<string, { correct: number, wrong: number }>>({});
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -49,16 +53,33 @@ export default function QuestionsPlayer() {
       });
       const data = await res.json();
       setFeedback(data);
+      
+      // Update session stats
+      const subjectName = currentQ.topic?.subject?.name || 'Geral';
+      setSessionStats(prev => {
+        const stats = prev[subjectName] || { correct: 0, wrong: 0 };
+        return {
+          ...prev,
+          [subjectName]: {
+            correct: stats.correct + (data.isCorrect ? 1 : 0),
+            wrong: stats.wrong + (!data.isCorrect ? 1 : 0)
+          }
+        };
+      });
     } catch (err) {
       console.error(err);
     }
   };
 
   const nextQuestion = () => {
+    if (currentIndex >= questions.length - 1) {
+      setIsFinished(true);
+      return;
+    }
     setFeedback(null);
     setSelectedOption(null);
     setStartTime(Date.now());
-    setCurrentIndex(prev => Math.min(prev + 1, questions.length - 1));
+    setCurrentIndex(prev => prev + 1);
   };
 
   if (questions.length === 0) {
@@ -80,6 +101,49 @@ export default function QuestionsPlayer() {
 
   const currentQ = questions[currentIndex];
   const optionLabels = ['A', 'B', 'C', 'D', 'E'];
+
+  if (isFinished) {
+    let totalC = 0, totalW = 0;
+    Object.values(sessionStats).forEach(s => { totalC += s.correct; totalW += s.wrong; });
+    const total = totalC + totalW;
+    const pct = total > 0 ? Math.round((totalC / total) * 100) : 0;
+
+    return (
+      <div className="h-full bg-[#0A0F0D] text-white flex flex-col relative overflow-y-auto">
+        <TopHeader />
+        <div className="p-6 flex-1 flex flex-col pb-24">
+          <Card className="bg-[#111C22] border-zinc-800/50 rounded-2xl flex-1 flex flex-col">
+            <CardContent className="p-8 flex flex-col items-center justify-center flex-1">
+              <h2 className="text-3xl font-bold mb-2">Treino Concluído!</h2>
+              <p className="text-zinc-400 mb-8 text-center">Excelente trabalho. Aqui está o seu diagnóstico desta sessão:</p>
+              
+              <div className="w-32 h-32 rounded-full border-8 flex items-center justify-center text-3xl font-bold mb-8"
+                   style={{ borderColor: pct >= 70 ? '#00B37E' : pct >= 50 ? '#FBBF24' : '#EF4444' }}>
+                {pct}%
+              </div>
+
+              <div className="w-full space-y-4 mb-8">
+                {Object.entries(sessionStats).map(([subj, stats]) => (
+                  <div key={subj} className="bg-[#0A0F0D] border border-zinc-800 p-4 rounded-xl flex justify-between items-center">
+                    <span className="font-bold text-sm">{subj}</span>
+                    <div className="flex gap-4 text-sm font-bold">
+                      <span className="text-[#00B37E] flex items-center gap-1"><CheckCircle2 className="w-4 h-4"/> {stats.correct}</span>
+                      <span className="text-red-500 flex items-center gap-1"><XCircle className="w-4 h-4"/> {stats.wrong}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Button onClick={() => window.location.href = '/missao'} className="w-full bg-[#3ADB6E] text-black hover:bg-[#00A35C] font-bold py-6 rounded-xl text-lg">
+                VOLTAR AO MAPA
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="h-full bg-[#0A0F0D] text-white flex flex-col relative pb-20">
