@@ -486,13 +486,39 @@ export class AppController {
 
     let correctCount = 0;
     const totalQuestions = attempt.simulado.questions.length;
+    
+    const answersData = [];
 
-    // We don't save individual answers for MVP speed, just calculate score
     for (const sq of attempt.simulado.questions) {
       const userAnswer = body.answers[sq.question.id];
-      if (userAnswer === sq.question.correctOption) {
+      const isCorrect = userAnswer === sq.question.correctOption;
+      
+      if (isCorrect) {
         correctCount++;
       }
+      
+      if (userAnswer !== undefined && userAnswer !== null) {
+        answersData.push({
+          userId: attempt.userId,
+          questionId: sq.question.id,
+          isCorrect: isCorrect,
+          timeSpentMs: 120000 // Average time 2 min per question in simulado if not tracked individually
+        });
+      }
+    }
+
+    // Save individual answers to feed the intelligence dashboard (MAPA)
+    if (answersData.length > 0) {
+      await this.prisma.userAnswer.createMany({
+        data: answersData
+      });
+    }
+
+    if (correctCount > 0) {
+      await this.prisma.user.update({
+        where: { id: attempt.userId },
+        data: { xp: { increment: correctCount * 10 } }
+      });
     }
 
     const score = Math.round((correctCount / totalQuestions) * 100);
