@@ -526,15 +526,22 @@ export class AppController {
   @UseGuards(JwtAuthGuard)
   @Get('questions')
   async getQuestions(@Query('subjectId') subjectId?: string) {
-    return this.prisma.question.findMany({
+    const questions = await this.prisma.question.findMany({
       where: subjectId ? { topic: { subjectId } } : undefined,
       include: {
-        options: true,
-        topic: {
-          include: { subject: true },
-        },
+        topic: { include: { subject: true } },
+        options: { orderBy: { orderIndex: 'asc' } },
       },
     });
+
+    // Fisher-Yates Shuffle para garantir que as questões sejam sempre randômicas
+    for (let i = questions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [questions[i], questions[j]] = [questions[j], questions[i]];
+    }
+
+    // Retorna até 20 questões aleatórias
+    return questions.slice(0, 20);
   }
 
   @UseGuards(JwtAuthGuard)
