@@ -54,14 +54,50 @@ export default function AcervoPage() {
   const [activeTab, setActiveTab] = useState<'provas' | 'extrator'>('provas');
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractSuccess, setExtractSuccess] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successCount, setSuccessCount] = useState(0);
 
-  const handleExtract = () => {
+  const handleExtract = async () => {
+    if (!file) {
+      alert("Por favor, selecione um arquivo PDF primeiro!");
+      return;
+    }
+
     setIsExtracting(true);
-    setTimeout(() => {
-      setIsExtracting(false);
+    setExtractSuccess(false);
+    setErrorMsg('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      // Podemos adicionar inputs para isso depois, por enquanto vai genérico
+      formData.append('title', file.name.replace('.pdf', ''));
+      formData.append('banca', 'Desconhecida');
+      formData.append('orgao', 'Concurso');
+      formData.append('year', new Date().getFullYear().toString());
+      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/api/extract`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao extrair questões.');
+      }
+
+      setSuccessCount(data.savedCount || 0);
       setExtractSuccess(true);
-      setTimeout(() => setExtractSuccess(false), 3000);
-    }, 3000);
+      setFile(null);
+      setTimeout(() => setExtractSuccess(false), 5000);
+    } catch (error: any) {
+      setErrorMsg(error.message || 'Falha na conexão com a IA.');
+    } finally {
+      setIsExtracting(false);
+    }
   };
 
   return (
@@ -160,27 +196,52 @@ export default function AcervoPage() {
                     Faça upload de uma prova em PDF e a PETRA IA fará a leitura ótica, separando enunciados das alternativas e injetando diretamente no Banco de Questões do app.
                   </p>
 
-                  <div className="border-2 border-dashed border-zinc-700 bg-[#0A0F0D] rounded-2xl p-8 mb-6 relative overflow-hidden">
+                  <div className="border-2 border-dashed border-zinc-700 hover:border-[#F5C518] transition-colors bg-[#0A0F0D] rounded-2xl p-8 mb-6 relative overflow-hidden cursor-pointer">
+                    <input 
+                      type="file" 
+                      accept="application/pdf"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setFile(e.target.files[0]);
+                          setErrorMsg('');
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    
                     {isExtracting ? (
                       <div className="flex flex-col items-center">
                         <div className="w-12 h-12 border-4 border-[#F5C518]/30 border-t-[#F5C518] rounded-full animate-spin mb-4" />
-                        <p className="text-[#F5C518] font-bold text-sm">Escaneando PDF...</p>
-                        <p className="text-xs text-zinc-500 mt-1">Extraindo enunciados e alternativas</p>
+                        <p className="text-[#F5C518] font-bold text-sm">A IA está lendo o PDF...</p>
+                        <p className="text-xs text-zinc-500 mt-1">Extraindo enunciados e alternativas (pode levar 1 min)</p>
                       </div>
                     ) : extractSuccess ? (
                       <div className="flex flex-col items-center">
                         <CheckCircle2 className="w-12 h-12 text-[#3ADB6E] mb-4" />
                         <p className="text-[#3ADB6E] font-bold text-sm">Extração Concluída!</p>
-                        <p className="text-xs text-zinc-500 mt-1">45 questões cadastradas no Banco de Dados.</p>
+                        <p className="text-xs text-zinc-500 mt-1">{successCount} questões cadastradas no Banco de Dados.</p>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center">
-                        <UploadCloud className="w-10 h-10 text-zinc-500 mb-3" />
-                        <p className="text-sm font-bold text-zinc-300 mb-1">Toque para selecionar a Prova (PDF)</p>
-                        <p className="text-xs text-zinc-500">Tamanho máximo: 10MB</p>
+                        {file ? (
+                          <>
+                            <FileText className="w-10 h-10 text-[#F5C518] mb-3" />
+                            <p className="text-sm font-bold text-white mb-1 truncate max-w-full px-4">{file.name}</p>
+                            <p className="text-xs text-[#3ADB6E]">Pronto para extração!</p>
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-10 h-10 text-zinc-500 mb-3" />
+                            <p className="text-sm font-bold text-zinc-300 mb-1">Toque para selecionar a Prova (PDF)</p>
+                            <p className="text-xs text-zinc-500">Tamanho máximo: 10MB</p>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
+                  {errorMsg && (
+                    <div className="text-red-500 text-xs font-bold mb-4">{errorMsg}</div>
+                  )}
 
                   <Button 
                     onClick={handleExtract}
