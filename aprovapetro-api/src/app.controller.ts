@@ -555,6 +555,20 @@ export class AppController {
 
     const isCorrect = question.correctOption === body.optionIndex;
 
+    let shouldAwardXp = false;
+    if (isCorrect) {
+      const existingCorrectAnswer = await this.prisma.userAnswer.findFirst({
+        where: {
+          userId: user.id,
+          questionId: question.id,
+          isCorrect: true,
+        },
+      });
+      if (!existingCorrectAnswer) {
+        shouldAwardXp = true;
+      }
+    }
+
     const answer = await this.prisma.userAnswer.create({
       data: {
         userId: user.id,
@@ -564,7 +578,7 @@ export class AppController {
       },
     });
 
-    if (isCorrect) {
+    if (shouldAwardXp) {
       await this.prisma.user.update({
         where: { id: user.id },
         data: { xp: { increment: 10 } },
@@ -618,8 +632,10 @@ export class AppController {
     return { attemptId: attempt.id, questions };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('simulados/finish')
   async finishSimulado(
+    @Req() req: { user: { userId: string } },
     @Body() body: { attemptId: string; answers: Record<string, number> },
   ) {
     const attempt = await this.prisma.simuladoAttempt.findUnique({
@@ -630,6 +646,9 @@ export class AppController {
     });
 
     if (!attempt) return { success: false };
+    if (attempt.userId !== req.user.userId || attempt.finishedAt) {
+      throw new UnauthorizedException('Attempt already finished or unauthorized');
+    }
 
     let correctCount = 0;
     const totalQuestions = attempt.simulado.questions.length;
@@ -658,13 +677,6 @@ export class AppController {
     if (answersData.length > 0) {
       await this.prisma.userAnswer.createMany({
         data: answersData,
-      });
-    }
-
-    if (correctCount > 0) {
-      await this.prisma.user.update({
-        where: { id: attempt.userId },
-        data: { xp: { increment: correctCount * 10 } },
       });
     }
 
@@ -735,7 +747,7 @@ export class AppController {
 
     try {
       const model = genAI.getGenerativeModel({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction:
           'Você é a PETRA IA, tutora inteligente e exclusiva do aplicativo AprovaPETRO. Você ajuda engenheiros e técnicos a passarem no concurso da Petrobras. Responda de forma direta, encorajadora, use emojis, e foque em dicas de estudo, estatísticas e resolução de questões. Nunca diga que é um modelo do Google, assuma a identidade da PETRA IA.',
       });

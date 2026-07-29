@@ -22,10 +22,12 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
-            throttler_1.ThrottlerModule.forRoot([{
+            throttler_1.ThrottlerModule.forRoot([
+                {
                     ttl: 60000,
                     limit: 60,
-                }]),
+                },
+            ]),
             auth_module_1.AuthModule,
         ],
         controllers: [app_controller_1.AppController, checkout_controller_1.CheckoutController],
@@ -34,7 +36,7 @@ exports.AppModule = AppModule = __decorate([
             {
                 provide: core_1.APP_GUARD,
                 useClass: throttler_1.ThrottlerGuard,
-            }
+            },
         ],
     })
 ], AppModule);

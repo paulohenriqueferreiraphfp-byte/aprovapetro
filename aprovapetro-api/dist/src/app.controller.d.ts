@@ -27,9 +27,9 @@ export declare class AppController {
         email: string;
         avatarId: string | null;
     }>;
-    checkSession(): Promise<{
+    checkSession(): {
         isValid: boolean;
-    }>;
+    };
     hotmartWebhook(body: any): Promise<{
         received: boolean;
     }>;
@@ -38,13 +38,21 @@ export declare class AppController {
         name: string;
         description: string | null;
     }[]>;
-    submitOnboarding(req: any, body: {
+    submitOnboarding(req: {
+        user: {
+            userId: string;
+        };
+    }, body: {
         cargoId: string;
     }): Promise<{
         success: boolean;
         missionId: string;
     }>;
-    updateUser(req: any, id: string, body: {
+    updateUser(req: {
+        user: {
+            userId: string;
+        };
+    }, id: string, body: {
         name?: string;
         avatarId?: string;
         examDate?: string;
@@ -54,7 +62,11 @@ export declare class AppController {
         avatarId: string | null;
         examDate: Date | null;
     }>;
-    getDashboard(req: any): Promise<{
+    getDashboard(req: {
+        user: {
+            userId: string;
+        };
+    }): Promise<{
         id?: undefined;
         indexAprovaPetro?: undefined;
         topPercent?: undefined;
@@ -106,11 +118,19 @@ export declare class AppController {
             tasks: any;
         };
     }>;
-    getRadarStats(req: any): Promise<{
+    getRadarStats(req: {
+        user: {
+            userId: string;
+        };
+    }): Promise<{
         subject: string;
         score: number;
     }[]>;
-    getDiagnostics(req: any): Promise<{
+    getDiagnostics(req: {
+        user: {
+            userId: string;
+        };
+    }): Promise<{
         subject: string;
         subjectId: string;
         drop: number;
@@ -149,7 +169,11 @@ export declare class AppController {
         explanation: string | null;
         topicId: string;
     })[]>;
-    submitAnswer(req: any, body: {
+    submitAnswer(req: {
+        user: {
+            userId: string;
+        };
+    }, body: {
         questionId: string;
         optionIndex: number;
         timeSpentMs: number;
@@ -175,7 +199,11 @@ export declare class AppController {
         title: string;
         durationMin: number;
     })[]>;
-    startSimulado(req: any, simuladoId: string): Promise<{
+    startSimulado(req: {
+        user: {
+            userId: string;
+        };
+    }, simuladoId: string): Promise<{
         attemptId: string;
         questions: ({
             question: {
@@ -212,7 +240,11 @@ export declare class AppController {
             simuladoId: string;
         })[];
     }>;
-    finishSimulado(body: {
+    finishSimulado(req: {
+        user: {
+            userId: string;
+        };
+    }, body: {
         attemptId: string;
         answers: Record<string, number>;
     }): Promise<{

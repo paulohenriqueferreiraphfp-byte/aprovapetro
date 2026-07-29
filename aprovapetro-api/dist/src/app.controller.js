@@ -61,7 +61,7 @@ let AppController = class AppController {
     }
     async login(body) {
         const user = await this.prisma.user.findUnique({
-            where: { email: body.email }
+            where: { email: body.email },
         });
         if (!user)
             throw new common_1.UnauthorizedException('E-mail ou senha incorretos.');
@@ -82,16 +82,19 @@ let AppController = class AppController {
         };
     }
     async register(body) {
-        const isAdmin = body.email === 'paulo.henrique.ferreira.phfp@gmail.com' || body.email.includes('admin');
+        const isAdmin = body.email === 'paulo.henrique.ferreira.phfp@gmail.com' ||
+            body.email.includes('admin');
         if (!isAdmin) {
             const allowed = await this.prisma.allowedEmail.findUnique({
-                where: { email: body.email }
+                where: { email: body.email },
             });
             if (!allowed) {
                 throw new common_1.UnauthorizedException('E-mail não autorizado. Você precisa adquirir o acesso na Hotmart primeiro.');
             }
         }
-        const existing = await this.prisma.user.findUnique({ where: { email: body.email } });
+        const existing = await this.prisma.user.findUnique({
+            where: { email: body.email },
+        });
         if (existing) {
             throw new common_1.UnauthorizedException('Este e-mail já está em uso.');
         }
@@ -105,7 +108,7 @@ let AppController = class AppController {
                 indexAprovaPetro: 0,
                 xp: 0,
                 avatarId: 'avatar-1',
-            }
+            },
         });
         const payload = { email: user.email, sub: user.id };
         const accessToken = this.jwtService.sign(payload);
@@ -118,7 +121,7 @@ let AppController = class AppController {
             avatarId: user.avatarId,
         };
     }
-    async checkSession() {
+    checkSession() {
         return { isValid: true };
     }
     async hotmartWebhook(body) {
@@ -128,7 +131,7 @@ let AppController = class AppController {
                 await this.prisma.allowedEmail.upsert({
                     where: { email: buyerEmail },
                     update: {},
-                    create: { email: buyerEmail }
+                    create: { email: buyerEmail },
                 });
                 console.log(`Venda Aprovada (Hotmart)! E-mail ${buyerEmail} liberado para cadastro.`);
             }
@@ -152,10 +155,20 @@ let AppController = class AppController {
                 userId: user.id,
                 title: `Missão de Nivelamento - ${user.cargo?.name}`,
                 tasks: JSON.stringify([
-                    { type: 'questions', title: 'Resolver 20 questões', subject: 'Conhecimentos Específicos', done: false },
-                    { type: 'flashcards', title: 'Revisar 15 flashcards', subject: 'Português', done: false },
+                    {
+                        type: 'questions',
+                        title: 'Resolver 20 questões',
+                        subject: 'Conhecimentos Específicos',
+                        done: false,
+                    },
+                    {
+                        type: 'flashcards',
+                        title: 'Revisar 15 flashcards',
+                        subject: 'Português',
+                        done: false,
+                    },
                 ]),
-            }
+            },
         });
         return { success: true, missionId: mission.id };
     }
@@ -164,38 +177,45 @@ let AppController = class AppController {
             throw new common_1.UnauthorizedException();
         const dataToUpdate = {
             name: body.name,
-            avatarId: body.avatarId
+            avatarId: body.avatarId,
         };
         if (body.examDate !== undefined) {
             dataToUpdate.examDate = body.examDate ? new Date(body.examDate) : null;
         }
         const user = await this.prisma.user.update({
             where: { id },
-            data: dataToUpdate
+            data: dataToUpdate,
         });
-        return { success: true, name: user.name, avatarId: user.avatarId, examDate: user.examDate };
+        return {
+            success: true,
+            name: user.name,
+            avatarId: user.avatarId,
+            examDate: user.examDate,
+        };
     }
     async getDashboard(req) {
         const user = await this.prisma.user.findFirst({
             where: { id: req.user.userId },
             include: {
                 missions: { orderBy: { date: 'desc' }, take: 1 },
-                cargo: true
-            }
+                cargo: true,
+            },
         });
         if (!user)
             return {};
         const aggregate = await this.prisma.userAnswer.aggregate({
             where: { userId: user.id },
             _count: { id: true },
-            _sum: { timeSpentMs: true }
+            _sum: { timeSpentMs: true },
         });
         const correctCount = await this.prisma.userAnswer.count({
-            where: { userId: user.id, isCorrect: true }
+            where: { userId: user.id, isCorrect: true },
         });
-        let totalQuestions = aggregate._count.id;
-        let totalTimeMs = aggregate._sum.timeSpentMs || 0;
-        const precision = totalQuestions === 0 ? 0 : Math.round((correctCount / totalQuestions) * 100);
+        const totalQuestions = aggregate._count.id;
+        const totalTimeMs = aggregate._sum.timeSpentMs || 0;
+        const precision = totalQuestions === 0
+            ? 0
+            : Math.round((correctCount / totalQuestions) * 100);
         const totalMinutes = Math.floor(totalTimeMs / (1000 * 60));
         const hours = Math.floor(totalMinutes / 60);
         const mins = totalMinutes % 60;
@@ -210,7 +230,7 @@ let AppController = class AppController {
         let topPercent = 100;
         if (user.xp > 0) {
             const usersAhead = await this.prisma.user.count({
-                where: { xp: { gt: user.xp } }
+                where: { xp: { gt: user.xp } },
             });
             const totalUsers = await this.prisma.user.count();
             if (totalUsers > 1) {
@@ -223,27 +243,46 @@ let AppController = class AppController {
         }
         if (topPercent === 0)
             topPercent = 1;
-        let indexStatus = { text: "REGULAR", color: "#F5C518", bg: "bg-[#F5C518]" };
+        let indexStatus = { text: 'REGULAR', color: '#F5C518', bg: 'bg-[#F5C518]' };
         if (precision >= 85)
-            indexStatus = { text: "ELITE", color: "#3ADB6E", bg: "bg-[#3ADB6E]" };
+            indexStatus = { text: 'ELITE', color: '#3ADB6E', bg: 'bg-[#3ADB6E]' };
         else if (precision >= 70)
-            indexStatus = { text: "COMPETITIVO", color: "#3ADB6E", bg: "bg-[#3ADB6E]" };
+            indexStatus = {
+                text: 'COMPETITIVO',
+                color: '#3ADB6E',
+                bg: 'bg-[#3ADB6E]',
+            };
         else if (precision < 50)
-            indexStatus = { text: "PERIGO", color: "#EF4444", bg: "bg-[#EF4444]" };
+            indexStatus = { text: 'PERIGO', color: '#EF4444', bg: 'bg-[#EF4444]' };
         let rankMessage = `Você está no Top ${topPercent}%`;
         if (totalQuestions === 0) {
-            rankMessage = "Aviso: Faça o Nivelamento Urgente!";
+            rankMessage = 'Aviso: Faça o Nivelamento Urgente!';
         }
         else if (precision < 50) {
-            rankMessage = "Alerta: Você está abaixo da média. Treine mais!";
+            rankMessage = 'Alerta: Você está abaixo da média. Treine mais!';
         }
         else if (precision < 70) {
             rankMessage = `Atenção: Acelere o ritmo! (Top ${topPercent}%)`;
         }
         const topSubjects = [
-            { name: "Segurança do Trabalho", percentage: 92, status: "Bom", color: "#3ADB6E" },
-            { name: "Português Instrumental", percentage: 68, status: "Regular", color: "#F5C518" },
-            { name: "Termodinâmica", percentage: 41, status: "Crítico", color: "#EF4444" }
+            {
+                name: 'Segurança do Trabalho',
+                percentage: 92,
+                status: 'Bom',
+                color: '#3ADB6E',
+            },
+            {
+                name: 'Português Instrumental',
+                percentage: 68,
+                status: 'Regular',
+                color: '#F5C518',
+            },
+            {
+                name: 'Termodinâmica',
+                percentage: 41,
+                status: 'Crítico',
+                color: '#EF4444',
+            },
         ];
         const mission = user.missions[0];
         const level = Math.floor(user.xp / 100) + 1;
@@ -257,25 +296,33 @@ let AppController = class AppController {
             level,
             streak: user.streak,
             name: user.name,
-            cargoName: user.cargo?.name || "Aluno PETRO",
+            cargoName: user.cargo?.name || 'Aluno PETRO',
             avatarId: user.avatarId,
             examDate: user.examDate,
             daysToExam,
             stats: { totalQuestions, timeFormatted, precision },
             topSubjects,
-            mission: mission ? {
-                id: mission.id,
-                title: mission.title,
-                tasks: JSON.parse(mission.tasks),
-            } : {
-                id: "default-1",
-                title: "Missão Diária",
-                tasks: [
-                    { title: "Resolver 10 questões da CESGRANRIO", type: "questions" },
-                    { title: "Revisar 5 Flashcards de Segurança", type: "flashcards" },
-                    { title: "Ler resumo de Termodinâmica", type: "reading" }
-                ]
-            },
+            mission: mission
+                ? {
+                    id: mission.id,
+                    title: mission.title,
+                    tasks: JSON.parse(mission.tasks),
+                }
+                : {
+                    id: 'default-1',
+                    title: 'Missão Diária',
+                    tasks: [
+                        {
+                            title: 'Resolver 10 questões da CESGRANRIO',
+                            type: 'questions',
+                        },
+                        {
+                            title: 'Revisar 5 Flashcards de Segurança',
+                            type: 'flashcards',
+                        },
+                        { title: 'Ler resumo de Termodinâmica', type: 'reading' },
+                    ],
+                },
         };
     }
     async getRadarStats(req) {
@@ -285,15 +332,15 @@ let AppController = class AppController {
         const answers = await this.prisma.userAnswer.findMany({
             where: { userId },
             include: {
-                question: { include: { topic: { include: { subject: true } } } }
-            }
+                question: { include: { topic: { include: { subject: true } } } },
+            },
         });
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            include: { cargo: true }
+            include: { cargo: true },
         });
         const subjectStats = {};
-        answers.forEach(ans => {
+        answers.forEach((ans) => {
             const subjName = ans.question.topic?.subject?.name || 'Gerais';
             if (!subjectStats[subjName]) {
                 subjectStats[subjName] = { total: 0, correct: 0 };
@@ -304,28 +351,65 @@ let AppController = class AppController {
         });
         const radar = Object.entries(subjectStats).map(([subject, counts]) => ({
             subject,
-            score: counts.total === 0 ? 0 : Math.round((counts.correct / counts.total) * 100)
+            score: counts.total === 0
+                ? 0
+                : Math.round((counts.correct / counts.total) * 100),
         }));
-        let defaultLabels = ['Português', 'Matemática', 'Legislação', 'NR-10', 'Específicas', 'Inglês'];
+        let defaultLabels = [
+            'Português',
+            'Matemática',
+            'Legislação',
+            'NR-10',
+            'Específicas',
+            'Inglês',
+        ];
         if (user?.cargo?.name) {
             if (user.cargo.name.includes('Segurança')) {
-                defaultLabels = ['Português', 'Matemática', 'NR-10', 'NRs', 'Higiene', 'Prevenção'];
+                defaultLabels = [
+                    'Português',
+                    'Matemática',
+                    'NR-10',
+                    'NRs',
+                    'Higiene',
+                    'Prevenção',
+                ];
             }
             else if (user.cargo.name.includes('Eletrotécnica')) {
-                defaultLabels = ['Português', 'Matemática', 'NR-10', 'Circuitos', 'Máquinas Elét.', 'Instalações'];
+                defaultLabels = [
+                    'Português',
+                    'Matemática',
+                    'NR-10',
+                    'Circuitos',
+                    'Máquinas Elét.',
+                    'Instalações',
+                ];
             }
             else if (user.cargo.name.includes('Mecânica')) {
-                defaultLabels = ['Português', 'Matemática', 'Termodinâmica', 'Fluidos', 'Metrologia', 'Resistência'];
+                defaultLabels = [
+                    'Português',
+                    'Matemática',
+                    'Termodinâmica',
+                    'Fluidos',
+                    'Metrologia',
+                    'Resistência',
+                ];
             }
             else if (user.cargo.name.includes('Operação')) {
-                defaultLabels = ['Português', 'Matemática', 'Química', 'Física', 'Instrumentação', 'Equipamentos'];
+                defaultLabels = [
+                    'Português',
+                    'Matemática',
+                    'Química',
+                    'Física',
+                    'Instrumentação',
+                    'Equipamentos',
+                ];
             }
         }
-        const finalRadar = defaultLabels.map(label => {
-            const found = radar.find(r => r.subject.includes(label) || label.includes(r.subject));
+        const finalRadar = defaultLabels.map((label) => {
+            const found = radar.find((r) => r.subject.includes(label) || label.includes(r.subject));
             return {
                 subject: label,
-                score: found ? found.score : 0
+                score: found ? found.score : 0,
             };
         });
         return finalRadar;
@@ -337,16 +421,22 @@ let AppController = class AppController {
         const answers = await this.prisma.userAnswer.findMany({
             where: { userId },
             include: {
-                question: { include: { topic: { include: { subject: true } } } }
-            }
+                question: { include: { topic: { include: { subject: true } } } },
+            },
         });
         if (answers.length === 0) {
             return [
-                { subject: "Nivelamento Geral", subjectId: "", drop: 100, msg: "Você ainda não respondeu questões suficientes. Faça o nivelamento.", type: "danger" }
+                {
+                    subject: 'Nivelamento Geral',
+                    subjectId: '',
+                    drop: 100,
+                    msg: 'Você ainda não respondeu questões suficientes. Faça o nivelamento.',
+                    type: 'danger',
+                },
             ];
         }
         const subjectStats = {};
-        answers.forEach(ans => {
+        answers.forEach((ans) => {
             const subjName = ans.question.topic?.subject?.name || 'Gerais';
             const subjId = ans.question.topic?.subjectId || '';
             if (!subjectStats[subjName]) {
@@ -359,15 +449,15 @@ let AppController = class AppController {
         const diagnostics = Object.entries(subjectStats).map(([subject, counts]) => {
             const score = Math.round((counts.correct / counts.total) * 100);
             const drop = 100 - score;
-            let type = "warning";
+            let type = 'warning';
             if (drop > 50)
-                type = "danger";
+                type = 'danger';
             return {
                 subject,
                 subjectId: counts.id,
                 drop,
                 msg: `Sua precisão atual é de ${score}%. É recomendado um treino de choque nesta área.`,
-                type
+                type,
             };
         });
         diagnostics.sort((a, b) => b.drop - a.drop);
@@ -382,36 +472,53 @@ let AppController = class AppController {
             include: {
                 options: true,
                 topic: {
-                    include: { subject: true }
-                }
-            }
+                    include: { subject: true },
+                },
+            },
         });
     }
     async submitAnswer(req, body) {
-        const user = await this.prisma.user.findUnique({ where: { id: req.user.userId } });
-        const question = await this.prisma.question.findUnique({ where: { id: body.questionId } });
+        const user = await this.prisma.user.findUnique({
+            where: { id: req.user.userId },
+        });
+        const question = await this.prisma.question.findUnique({
+            where: { id: body.questionId },
+        });
         if (!user || !question)
             return { success: false };
         const isCorrect = question.correctOption === body.optionIndex;
+        let shouldAwardXp = false;
+        if (isCorrect) {
+            const existingCorrectAnswer = await this.prisma.userAnswer.findFirst({
+                where: {
+                    userId: user.id,
+                    questionId: question.id,
+                    isCorrect: true,
+                },
+            });
+            if (!existingCorrectAnswer) {
+                shouldAwardXp = true;
+            }
+        }
         const answer = await this.prisma.userAnswer.create({
             data: {
                 userId: user.id,
                 questionId: question.id,
                 isCorrect,
                 timeSpentMs: body.timeSpentMs,
-            }
+            },
         });
-        if (isCorrect) {
+        if (shouldAwardXp) {
             await this.prisma.user.update({
                 where: { id: user.id },
-                data: { xp: { increment: 10 } }
+                data: { xp: { increment: 10 } },
             });
         }
         return {
             success: true,
             isCorrect,
             explanation: question.explanation,
-            correctOption: question.correctOption
+            correctOption: question.correctOption,
         };
     }
     async getSimulados(cargoId) {
@@ -419,36 +526,41 @@ let AppController = class AppController {
             where: cargoId ? { cargoId } : undefined,
             include: {
                 _count: {
-                    select: { questions: true }
-                }
-            }
+                    select: { questions: true },
+                },
+            },
         });
     }
     async startSimulado(req, simuladoId) {
         const attempt = await this.prisma.simuladoAttempt.create({
             data: {
                 userId: req.user.userId,
-                simuladoId: simuladoId
-            }
+                simuladoId: simuladoId,
+            },
         });
         const questions = await this.prisma.simuladoQuestion.findMany({
             where: { simuladoId },
             orderBy: { orderIndex: 'asc' },
             include: {
                 question: {
-                    include: { options: true, topic: { include: { subject: true } } }
-                }
-            }
+                    include: { options: true, topic: { include: { subject: true } } },
+                },
+            },
         });
         return { attemptId: attempt.id, questions };
     }
-    async finishSimulado(body) {
+    async finishSimulado(req, body) {
         const attempt = await this.prisma.simuladoAttempt.findUnique({
             where: { id: body.attemptId },
-            include: { simulado: { include: { questions: { include: { question: true } } } } }
+            include: {
+                simulado: { include: { questions: { include: { question: true } } } },
+            },
         });
         if (!attempt)
             return { success: false };
+        if (attempt.userId !== req.user.userId || attempt.finishedAt) {
+            throw new common_1.UnauthorizedException('Attempt already finished or unauthorized');
+        }
         let correctCount = 0;
         const totalQuestions = attempt.simulado.questions.length;
         const answersData = [];
@@ -463,29 +575,23 @@ let AppController = class AppController {
                     userId: attempt.userId,
                     questionId: sq.question.id,
                     isCorrect: isCorrect,
-                    timeSpentMs: 120000
+                    timeSpentMs: 120000,
                 });
             }
         }
         if (answersData.length > 0) {
             await this.prisma.userAnswer.createMany({
-                data: answersData
-            });
-        }
-        if (correctCount > 0) {
-            await this.prisma.user.update({
-                where: { id: attempt.userId },
-                data: { xp: { increment: correctCount * 10 } }
+                data: answersData,
             });
         }
         const score = Math.round((correctCount / totalQuestions) * 100);
         await this.prisma.simuladoAttempt.update({
             where: { id: attempt.id },
-            data: { score, finishedAt: new Date() }
+            data: { score, finishedAt: new Date() },
         });
         await this.prisma.user.update({
             where: { id: attempt.userId },
-            data: { xp: { increment: correctCount * 15 } }
+            data: { xp: { increment: correctCount * 15 } },
         });
         return { success: true, score, correctCount, totalQuestions };
     }
@@ -511,10 +617,10 @@ let AppController = class AppController {
                     options: {
                         create: q.options.map((optText, index) => ({
                             text: optText,
-                            orderIndex: index
-                        }))
-                    }
-                }
+                            orderIndex: index,
+                        })),
+                    },
+                },
             });
             createdQuestions.push(created);
         }
@@ -525,13 +631,13 @@ let AppController = class AppController {
         const genAI = apiKey ? new generative_ai_1.GoogleGenerativeAI(apiKey) : null;
         if (!genAI) {
             return {
-                reply: '⚠️ **Aviso de Sistema:** A minha inteligência neural (Google Gemini) ainda está desligada! O desenvolvedor precisa colar a chave (GEMINI_API_KEY) no arquivo .env do backend para eu poder pensar de verdade.'
+                reply: '⚠️ **Aviso de Sistema:** A minha inteligência neural (Google Gemini) ainda está desligada! O desenvolvedor precisa colar a chave (GEMINI_API_KEY) no arquivo .env do backend para eu poder pensar de verdade.',
             };
         }
         try {
             const model = genAI.getGenerativeModel({
-                model: 'gemini-3.5-flash',
-                systemInstruction: "Você é a PETRA IA, tutora inteligente e exclusiva do aplicativo AprovaPETRO. Você ajuda engenheiros e técnicos a passarem no concurso da Petrobras. Responda de forma direta, encorajadora, use emojis, e foque em dicas de estudo, estatísticas e resolução de questões. Nunca diga que é um modelo do Google, assuma a identidade da PETRA IA."
+                model: 'gemini-1.5-flash',
+                systemInstruction: 'Você é a PETRA IA, tutora inteligente e exclusiva do aplicativo AprovaPETRO. Você ajuda engenheiros e técnicos a passarem no concurso da Petrobras. Responda de forma direta, encorajadora, use emojis, e foque em dicas de estudo, estatísticas e resolução de questões. Nunca diga que é um modelo do Google, assuma a identidade da PETRA IA.',
             });
             const result = await model.generateContent(body.message);
             const response = await result.response;
@@ -539,7 +645,9 @@ let AppController = class AppController {
         }
         catch (error) {
             console.error('Erro na IA:', error);
-            return { reply: 'Minhas engrenagens travaram um pouco! Houve um erro de conexão com a central de inteligência. Tente novamente mais tarde.' };
+            return {
+                reply: 'Minhas engrenagens travaram um pouco! Houve um erro de conexão com a central de inteligência. Tente novamente mais tarde.',
+            };
         }
     }
 };
@@ -563,7 +671,7 @@ __decorate([
     (0, common_1.Get)('auth/check-session'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AppController.prototype, "checkSession", null);
 __decorate([
     (0, common_1.Post)('webhooks/hotmart'),
@@ -663,10 +771,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AppController.prototype, "startSimulado", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('simulados/finish'),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], AppController.prototype, "finishSimulado", null);
 __decorate([
@@ -685,6 +795,7 @@ __decorate([
 ], AppController.prototype, "chat", null);
 exports.AppController = AppController = __decorate([
     (0, common_1.Controller)('api'),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, jwt_1.JwtService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        jwt_1.JwtService])
 ], AppController);
 //# sourceMappingURL=app.controller.js.map

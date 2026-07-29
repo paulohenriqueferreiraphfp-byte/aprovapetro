@@ -15,7 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CheckoutController = void 0;
 const common_1 = require("@nestjs/common");
 const mercadopago_1 = require("mercadopago");
-const client = new mercadopago_1.MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN || 'TEST-0000000000000000-000000-00000000000000000000000000000000-000000000' });
+const client = new mercadopago_1.MercadoPagoConfig({
+    accessToken: process.env.MP_ACCESS_TOKEN ||
+        'TEST-0000000000000000-000000-00000000000000000000000000000000-000000000',
+});
 let CheckoutController = class CheckoutController {
     async createPreference(body) {
         try {
@@ -27,19 +30,19 @@ let CheckoutController = class CheckoutController {
                             id: body.planId,
                             title: 'Assinatura VIP AprovaPETRO',
                             quantity: 1,
-                            unit_price: 49.90,
+                            unit_price: 49.9,
                             currency_id: 'BRL',
-                        }
+                        },
                     ],
                     external_reference: body.userId,
                     back_urls: {
                         success: 'http://localhost:3000/sucesso',
                         failure: 'http://localhost:3000/falha',
-                        pending: 'http://localhost:3000/pendente'
+                        pending: 'http://localhost:3000/pendente',
                     },
                     auto_return: 'approved',
-                    notification_url: 'https://seusite.com.br/api/checkout/webhook'
-                }
+                    notification_url: 'https://seusite.com.br/api/checkout/webhook',
+                },
             });
             return { success: true, init_point: response.init_point };
         }
