@@ -12,9 +12,11 @@ import { TopHeader } from '@/components/TopHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUserStore } from '@/store/userStore';
 
 export default function Home() {
-  const [data, setData] = useState<any>(null);
+  const { dashboardData, setDashboardData } = useUserStore();
+  const [data, setData] = useState<any>(dashboardData);
   const [completedTasks, setCompletedTasks] = useState<number[]>([]);
   const [showRankModal, setShowRankModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
@@ -65,12 +67,13 @@ export default function Home() {
       .then(res => res.json())
       .then(d => {
         setData(d);
+        setDashboardData(d);
         if (d.examDate) {
           setEditExamDate(new Date(d.examDate).toISOString().split('T')[0]);
         }
       })
       .catch(console.error);
-  }, [router]);
+  }, [router, setDashboardData]);
 
   const handleSaveExamDate = async () => {
     setIsSavingDate(true);
