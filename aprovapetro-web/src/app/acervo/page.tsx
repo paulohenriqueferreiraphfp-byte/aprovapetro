@@ -114,7 +114,7 @@ export default function AcervoPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="bg-zinc-800 text-zinc-300 text-[10px] font-bold px-2 py-0.5 rounded uppercase">{prova.banca}</span>
+                          <span className="bg-zinc-700 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">{prova.banca}</span>
                           <span className="text-[#3ADB6E] text-[10px] font-bold uppercase">{prova.orgao} • {prova.year}</span>
                         </div>
                         <h3 className="font-bold text-base leading-tight mb-4">{prova.title}</h3>
@@ -122,17 +122,17 @@ export default function AcervoPage() {
                         <div className="flex gap-2">
                           <Button 
                             variant="outline" 
-                            className="flex-1 bg-transparent border-[#3ADB6E]/50 text-[#3ADB6E] hover:bg-[#3ADB6E]/10 text-xs font-bold h-9"
+                            className="flex-1 bg-white text-black border-zinc-200 hover:bg-zinc-200 hover:text-black text-xs font-bold h-9 shadow-sm"
                             onClick={() => alert('Download do PDF da Prova (Em breve, conectado ao Banco de Dados)')}
                           >
-                            <Download className="w-3 h-3 mr-1" /> Prova
+                            <Download className="w-3 h-3 mr-1 text-[#0A0F0D]" /> Prova
                           </Button>
                           <Button 
                             variant="outline" 
-                            className="flex-1 bg-transparent border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:text-white text-xs font-bold h-9"
+                            className="flex-1 bg-white text-black border-zinc-200 hover:bg-zinc-200 hover:text-black text-xs font-bold h-9 shadow-sm"
                             onClick={() => alert('Download do Gabarito Oficial')}
                           >
-                            <Download className="w-3 h-3 mr-1" /> Gabarito
+                            <Download className="w-3 h-3 mr-1 text-[#0A0F0D]" /> Gabarito
                           </Button>
                         </div>
                       </div>
