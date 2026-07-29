@@ -40,11 +40,18 @@ export class AppController {
         throw new UnauthorizedException('E-mail ou senha incorretos.');
     }
 
-    const payload = { email: user.email, sub: user.id };
+    // Gerar novo sessionId para derrubar outras sessões
+    const sessionId = crypto.randomUUID();
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { sessionId },
+    });
+
+    const payload = { email: user.email, sub: user.id, sessionId };
     const accessToken = this.jwtService.sign(payload);
 
     return {
-      userId: user.id, // Mantemos para retrocompatibilidade
+      userId: user.id,
       accessToken,
       isOnboarded: !!user.cargoId,
       name: user.name,
@@ -81,6 +88,9 @@ export class AppController {
 
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(body.password || 'senha123', salt);
+    
+    // Gerar um novo SessionID para derrubar qualquer acesso anterior se houvesse
+    const sessionId = crypto.randomUUID();
 
     const user = await this.prisma.user.create({
       data: {
@@ -90,10 +100,11 @@ export class AppController {
         indexAprovaPetro: 0,
         xp: 0,
         avatarId: 'avatar-1',
+        sessionId: sessionId,
       },
     });
 
-    const payload = { email: user.email, sub: user.id };
+    const payload = { email: user.email, sub: user.id, sessionId };
     const accessToken = this.jwtService.sign(payload);
 
     return {
@@ -108,8 +119,21 @@ export class AppController {
 
   @UseGuards(JwtAuthGuard)
   @Get('auth/check-session')
-  checkSession() {
-    return { isValid: true };
+  async checkSession(@Req() req: any) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { sessionId: true, avatarId: true, name: true }
+    });
+    
+    if (!user || user.sessionId !== req.user.sessionId) {
+      return { valid: false };
+    }
+    
+    return { 
+      valid: true,
+      avatarId: user.avatarId,
+      name: user.name
+    };
   }
 
   @Post('webhooks/hotmart')
