@@ -7,6 +7,8 @@ import { useUserStore } from '@/store/userStore';
 export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useUserStore();
+  
+  if (pathname === '/login' || pathname === '/register' || pathname === '/onboarding') return null;
 
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },

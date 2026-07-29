@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Bot, User, BrainCircuit, Flame, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const AVATARS = [
   { id: 'avatar-1', icon: User, color: '#3ADB6E', bg: 'bg-[#3ADB6E]/20' },
@@ -17,6 +18,12 @@ import { useUserStore } from '@/store/userStore';
 
 export function TopHeader() {
   const { user } = useUserStore();
+  const pathname = usePathname();
+  
+  if (pathname === '/login' || pathname === '/register' || pathname === '/onboarding') {
+    return null;
+  }
+
   const avatarId = user?.avatarId || 'avatar-1';
 
   const isCustomAvatar = avatarId.startsWith('data:image/');
@@ -24,10 +31,7 @@ export function TopHeader() {
   const CurrentAvatarIcon = CurrentAvatar.icon;
 
   return (
-    <motion.header 
-      initial={{ y: -50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+    <header 
       className="px-5 py-4 flex items-center justify-between z-10 sticky top-0 bg-[#0A0F0D]/80 backdrop-blur-md border-b border-zinc-800/50"
     >
       <Link href="/perfil">
@@ -51,6 +55,6 @@ export function TopHeader() {
           <Bot className="w-6 h-6" />
         </motion.button>
       </Link>
-    </motion.header>
+    </header>
   );
 }
