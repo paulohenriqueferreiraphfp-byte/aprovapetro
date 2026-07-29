@@ -310,7 +310,13 @@ const AVATARS = [
         <motion.div 
           variants={itemVariants}
           whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-r from-[#F5C518]/20 to-transparent border border-[#F5C518]/30 rounded-2xl p-4 flex items-center justify-between mt-6 shadow-[0_0_20px_rgba(245,197,24,0.1)]"
+          className={`border rounded-2xl p-4 flex items-center justify-between mt-6 shadow-lg ${
+            data.topPercent > 50 
+              ? 'bg-gradient-to-r from-red-500/20 to-transparent border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]' 
+              : data.topPercent <= 20
+                ? 'bg-gradient-to-r from-[#3ADB6E]/20 to-transparent border-[#3ADB6E]/30 shadow-[0_0_20px_rgba(58,219,110,0.1)]'
+                : 'bg-gradient-to-r from-[#F5C518]/20 to-transparent border-[#F5C518]/30 shadow-[0_0_20px_rgba(245,197,24,0.1)]'
+          }`}
         >
           <div className="flex items-center gap-4">
             <motion.div 
@@ -318,14 +324,30 @@ const AVATARS = [
               transition={{ repeat: Infinity, duration: 2, repeatDelay: 3 }}
               className="w-12 h-12 flex items-center justify-center text-3xl"
             >
-              🏆
+              {data.topPercent > 50 ? '⚠️' : data.topPercent <= 20 ? '👑' : '🏆'}
             </motion.div>
             <div>
-              <h4 className="font-bold text-[#F5C518]">Subida de Ranking!</h4>
-              <p className="text-xs text-zinc-400">Você ultrapassou 420 candidatos hoje.</p>
+              <h4 className={`font-bold ${
+                data.topPercent > 50 ? 'text-red-400' : data.topPercent <= 20 ? 'text-[#3ADB6E]' : 'text-[#F5C518]'
+              }`}>
+                {data.topPercent > 50 ? 'Alerta de Queda!' : data.topPercent <= 20 ? 'Elite Consolidada!' : 'Subida de Ranking!'}
+              </h4>
+              <p className="text-xs text-zinc-400">
+                {data.topPercent > 50 
+                  ? 'Você está perdendo posições. Reaja!' 
+                  : data.topPercent <= 20 
+                    ? 'Você está no topo da cadeia alimentar.' 
+                    : 'Você ultrapassou dezenas de candidatos.'}
+              </p>
             </div>
           </div>
-          <Button onClick={() => setShowRankModal(true)} size="sm" className="bg-[#F5C518] hover:bg-[#d9a51c] text-black font-bold rounded-xl transition-transform active:scale-95">
+          <Button 
+            onClick={() => setShowRankModal(true)} 
+            size="sm" 
+            className={`font-bold rounded-xl transition-transform active:scale-95 text-black ${
+              data.topPercent > 50 ? 'bg-red-500 hover:bg-red-600' : data.topPercent <= 20 ? 'bg-[#3ADB6E] hover:bg-[#009266]' : 'bg-[#F5C518] hover:bg-[#d9a51c]'
+            }`}
+          >
             Ver Rank
           </Button>
         </motion.div>
