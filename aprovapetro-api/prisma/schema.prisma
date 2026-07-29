@@ -148,3 +148,15 @@ model AllowedEmail {
   email     String   @unique
   createdAt DateTime @default(now())
 }
+
+model Exam {
+  id           String   @id @default(uuid())
+  title        String
+  banca        String
+  orgao        String
+  year         Int
+  pdfUrl       String?
+  gabaritoUrl  String?
+  isPremium    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}

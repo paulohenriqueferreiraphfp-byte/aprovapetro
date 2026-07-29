@@ -8,7 +8,10 @@ import {
   Param,
   UseGuards,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PrismaService } from './prisma.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { JwtService } from '@nestjs/jwt';
@@ -793,6 +796,145 @@ export class AppController {
         reply:
           'Minhas engrenagens travaram um pouco! Houve um erro de conexão com a central de inteligência. Tente novamente mais tarde.',
       };
+    }
+  }
+
+  @Get('exams')
+  async getExams() {
+    return this.prisma.exam.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  @Post('extract')
+  @UseInterceptors(FileInterceptor('file'))
+  async extractQuestions(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: { title: string; banca: string; orgao: string; year: string; topicId: string }
+  ) {
+    if (!file) {
+      throw new Error('Nenhum arquivo enviado.');
+    }
+
+    try {
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ 
+        model: 'gemini-1.5-flash',
+        generationConfig: {
+          responseMimeType: 'application/json',
+        }
+      });
+
+      const prompt = `
+        Você é um assistente especializado em provas de concursos públicos.
+        Eu vou te enviar um PDF de uma prova.
+        Extraia todas as questões desta prova e retorne ESTRITAMENTE em formato JSON.
+        
+        O JSON deve ser um array de objetos com o seguinte formato exato:
+        [
+          {
+            "statement": "Texto do enunciado da questão completo...",
+            "options": [
+              "Texto da alternativa A",
+              "Texto da alternativa B",
+              "Texto da alternativa C",
+              "Texto da alternativa D",
+              "Texto da alternativa E"
+            ],
+            "correctOption": 0, // Índice da alternativa correta (0 a 4). Se você não tiver o gabarito ou não tiver certeza, infira a resposta correta baseado no seu vasto conhecimento, ou chute 0 se for impossível.
+            "explanation": "Explicação detalhada da resposta...",
+            "tip": "Dica rápida (Macete da PETRA IA) para acertar questões como essa no futuro"
+          }
+        ]
+
+        AVISOS:
+        1. NÃO invente questões. Extraia EXATAMENTE o que está no PDF.
+        2. O JSON deve conter o array raiz. Não coloque blocos de marcação markdown (como \`\`\`json). Apenas retorne os dados.
+        3. Se não houver 5 alternativas, coloque as que existem.
+      `;
+
+      const result = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: file.buffer.toString('base64'),
+            mimeType: 'application/pdf',
+          },
+        },
+      ]);
+
+      const responseText = result.response.text();
+      let questionsData = [];
+      try {
+        questionsData = JSON.parse(responseText);
+      } catch (e) {
+        // Fallback for markdown blocks
+        const cleaned = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+        questionsData = JSON.parse(cleaned);
+      }
+
+      // Save Exam record
+      const exam = await this.prisma.exam.create({
+        data: {
+          title: body.title || 'Prova Extraída via IA',
+          banca: body.banca || 'DESCONHECIDA',
+          orgao: body.orgao || 'DESCONHECIDO',
+          year: parseInt(body.year) || new Date().getFullYear(),
+        }
+      });
+
+      // Ensure a default Subject and Topic exist
+      let defaultTopic = await this.prisma.topic.findFirst({
+        where: { name: 'Assuntos Gerais' }
+      });
+      if (!defaultTopic) {
+        let subject = await this.prisma.subject.findFirst();
+        if (!subject) {
+          subject = await this.prisma.subject.create({
+            data: { name: 'Conhecimentos Básicos', color: '#3ADB6E' }
+          });
+        }
+        defaultTopic = await this.prisma.topic.create({
+          data: { name: 'Assuntos Gerais', subjectId: subject.id }
+        });
+      }
+
+      const finalTopicId = body.topicId || defaultTopic.id;
+
+      // Save all questions
+      let savedCount = 0;
+      for (const qData of questionsData) {
+        if (!qData.statement || !qData.options || !Array.isArray(qData.options)) continue;
+
+        await this.prisma.question.create({
+          data: {
+            topicId: finalTopicId,
+            bank: exam.banca,
+            year: exam.year,
+            statement: qData.statement,
+            correctOption: qData.correctOption || 0,
+            explanation: qData.explanation || '',
+            tip: qData.tip || '',
+            options: {
+              create: qData.options.map((optText: string, index: number) => ({
+                text: optText,
+                orderIndex: index
+              }))
+            }
+          }
+        });
+        savedCount++;
+      }
+
+      return {
+        success: true,
+        message: `${savedCount} questões extraídas e salvas com sucesso!`,
+        examId: exam.id,
+        savedCount
+      };
+    } catch (error) {
+      console.error('Erro ao extrair PDF:', error);
+      throw new Error('Falha ao processar a prova com IA: ' + error.message);
     }
   }
 }
