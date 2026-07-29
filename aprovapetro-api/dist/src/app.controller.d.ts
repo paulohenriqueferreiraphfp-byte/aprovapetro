@@ -1,15 +1,19 @@
 import { PrismaService } from './prisma.service';
+import { JwtService } from '@nestjs/jwt';
 export declare class AppController {
     private prisma;
-    constructor(prisma: PrismaService);
+    private jwtService;
+    constructor(prisma: PrismaService, jwtService: JwtService);
     login(body: {
         email: string;
         password?: string;
     }): Promise<{
         userId: string;
+        accessToken: string;
         isOnboarded: boolean;
         name: string;
         email: string;
+        avatarId: string | null;
     }>;
     register(body: {
         name: string;
@@ -17,40 +21,77 @@ export declare class AppController {
         password?: string;
     }): Promise<{
         userId: string;
+        accessToken: string;
         isOnboarded: boolean;
         name: string;
         email: string;
+        avatarId: string | null;
+    }>;
+    checkSession(): Promise<{
+        isValid: boolean;
+    }>;
+    hotmartWebhook(body: any): Promise<{
+        received: boolean;
     }>;
     getCargos(): Promise<{
         id: string;
         name: string;
         description: string | null;
     }[]>;
-    submitOnboarding(body: {
-        userId: string;
+    submitOnboarding(req: any, body: {
         cargoId: string;
     }): Promise<{
         success: boolean;
         missionId: string;
     }>;
-    getDashboard(userId: string): Promise<{
+    updateUser(req: any, id: string, body: {
+        name?: string;
+        avatarId?: string;
+        examDate?: string;
+    }): Promise<{
+        success: boolean;
+        name: string;
+        avatarId: string | null;
+        examDate: Date | null;
+    }>;
+    getDashboard(req: any): Promise<{
+        id?: undefined;
         indexAprovaPetro?: undefined;
+        topPercent?: undefined;
+        rankMessage?: undefined;
+        indexStatus?: undefined;
         xp?: undefined;
         level?: undefined;
         streak?: undefined;
         name?: undefined;
+        cargoName?: undefined;
+        avatarId?: undefined;
+        examDate?: undefined;
+        daysToExam?: undefined;
         stats?: undefined;
         topSubjects?: undefined;
         mission?: undefined;
     } | {
+        id: string;
         indexAprovaPetro: number;
+        topPercent: number;
+        rankMessage: string;
+        indexStatus: {
+            text: string;
+            color: string;
+            bg: string;
+        };
         xp: number;
         level: number;
         streak: number;
         name: string;
+        cargoName: string;
+        avatarId: string | null;
+        examDate: Date | null;
+        daysToExam: number | null;
         stats: {
             totalQuestions: number;
-            hours: number;
+            timeFormatted: string;
             precision: number;
         };
         topSubjects: {
@@ -65,12 +106,13 @@ export declare class AppController {
             tasks: any;
         };
     }>;
-    getRadarStats(userId: string): Promise<{
+    getRadarStats(req: any): Promise<{
         subject: string;
         score: number;
     }[]>;
-    getDiagnostics(userId: string): Promise<{
+    getDiagnostics(req: any): Promise<{
         subject: string;
+        subjectId: string;
         drop: number;
         msg: string;
         type: string;
@@ -94,21 +136,20 @@ export declare class AppController {
         };
         options: {
             id: string;
-            questionId: string;
             text: string;
             orderIndex: number;
+            questionId: string;
         }[];
     } & {
         id: string;
-        topicId: string;
         bank: string | null;
         year: number | null;
         statement: string;
         correctOption: number;
         explanation: string | null;
+        topicId: string;
     })[]>;
-    submitAnswer(body: {
-        userId: string;
+    submitAnswer(req: any, body: {
         questionId: string;
         optionIndex: number;
         timeSpentMs: number;
@@ -129,14 +170,12 @@ export declare class AppController {
         };
     } & {
         id: string;
-        cargoId: string;
         description: string | null;
+        cargoId: string;
         title: string;
         durationMin: number;
     })[]>;
-    startSimulado(simuladoId: string, body: {
-        userId: string;
-    }): Promise<{
+    startSimulado(req: any, simuladoId: string): Promise<{
         attemptId: string;
         questions: ({
             question: {
@@ -153,23 +192,23 @@ export declare class AppController {
                 };
                 options: {
                     id: string;
-                    questionId: string;
                     text: string;
                     orderIndex: number;
+                    questionId: string;
                 }[];
             } & {
                 id: string;
-                topicId: string;
                 bank: string | null;
                 year: number | null;
                 statement: string;
                 correctOption: number;
                 explanation: string | null;
+                topicId: string;
             };
         } & {
             id: string;
-            questionId: string;
             orderIndex: number;
+            questionId: string;
             simuladoId: string;
         })[];
     }>;

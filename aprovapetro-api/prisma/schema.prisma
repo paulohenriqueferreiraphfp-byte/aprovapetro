@@ -19,6 +19,7 @@ model User {
   cargoId          String?
   sessionId        String?
   avatarId         String?  @default("avatar-1")
+  examDate         DateTime?
   createdAt        DateTime @default(now())
 
 

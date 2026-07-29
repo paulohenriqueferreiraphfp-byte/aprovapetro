@@ -6,6 +6,8 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 
+import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -13,6 +15,7 @@ import { ConfigModule } from '@nestjs/config';
       ttl: 60000,
       limit: 60,
     }]),
+    AuthModule,
   ],
   controllers: [AppController, CheckoutController],
   providers: [

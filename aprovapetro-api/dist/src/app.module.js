@@ -14,6 +14,7 @@ const prisma_service_1 = require("./prisma.service");
 const throttler_1 = require("@nestjs/throttler");
 const core_1 = require("@nestjs/core");
 const config_1 = require("@nestjs/config");
+const auth_module_1 = require("./auth/auth.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -25,6 +26,7 @@ exports.AppModule = AppModule = __decorate([
                     ttl: 60000,
                     limit: 60,
                 }]),
+            auth_module_1.AuthModule,
         ],
         controllers: [app_controller_1.AppController, checkout_controller_1.CheckoutController],
         providers: [

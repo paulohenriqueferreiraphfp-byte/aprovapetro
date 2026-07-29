@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Body, UnauthorizedException, Query, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, UnauthorizedException, Query, Param, UseGuards, Req } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Controller('api')
 export class AppController {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private jwtService: JwtService) {}
 
   @Post('auth/login')
   async login(@Body() body: { email: string; password?: string }) {
@@ -14,16 +17,18 @@ export class AppController {
     
     if (!user) throw new UnauthorizedException('E-mail ou senha incorretos.');
     
-    // Gerar nova sessão (derruba as antigas)
-    const newSessionId = require('crypto').randomUUID();
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { sessionId: newSessionId }
-    });
+    // Validar senha (como o banco de dados tem 'hashed_pw' mocado, a gente deixa passar se for 'hashed_pw', caso contrário usa bcrypt)
+    if (user.passwordHash !== 'hashed_pw') {
+      const isMatch = await bcrypt.compare(body.password || '', user.passwordHash);
+      if (!isMatch) throw new UnauthorizedException('E-mail ou senha incorretos.');
+    }
+
+    const payload = { email: user.email, sub: user.id };
+    const accessToken = this.jwtService.sign(payload);
     
     return {
-      userId: user.id,
-      sessionId: newSessionId,
+      userId: user.id, // Mantemos para retrocompatibilidade
+      accessToken,
       isOnboarded: !!user.cargoId,
       name: user.name,
       email: user.email,
@@ -33,8 +38,6 @@ export class AppController {
 
   @Post('auth/register')
   async register(@Body() body: { name: string; email: string; password?: string }) {
-    // 1. Verificar se o e-mail está na lista VIP (AllowedEmail)
-    // Se o e-mail for o seu (admin), deixamos passar livremente para testes
     const isAdmin = body.email === 'paulo.henrique.ferreira.phfp@gmail.com' || body.email.includes('admin');
     
     if (!isAdmin) {
@@ -51,23 +54,26 @@ export class AppController {
       throw new UnauthorizedException('Este e-mail já está em uso.');
     }
 
-    const newSessionId = require('crypto').randomUUID();
+    const salt = await bcrypt.genSalt();
+    const hash = await bcrypt.hash(body.password || 'senha123', salt);
 
     const user = await this.prisma.user.create({
       data: {
         name: body.name,
         email: body.email,
-        passwordHash: 'hashed_pw', // Mock hash
+        passwordHash: hash,
         indexAprovaPetro: 0,
         xp: 0,
-        sessionId: newSessionId,
         avatarId: 'avatar-1',
       }
     });
 
+    const payload = { email: user.email, sub: user.id };
+    const accessToken = this.jwtService.sign(payload);
+
     return {
       userId: user.id,
-      sessionId: newSessionId,
+      accessToken,
       isOnboarded: false,
       name: user.name,
       email: user.email,
@@ -75,19 +81,9 @@ export class AppController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('auth/check-session')
-  async checkSession(@Query('userId') userId: string, @Query('sessionId') sessionId: string) {
-    if (!userId || !sessionId) return { isValid: false };
-    
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { sessionId: true }
-    });
-
-    if (!user || user.sessionId !== sessionId) {
-      return { isValid: false };
-    }
-    
+  async checkSession() {
     return { isValid: true };
   }
 
@@ -121,10 +117,11 @@ export class AppController {
     return this.prisma.cargo.findMany();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('onboarding')
-  async submitOnboarding(@Body() body: { userId: string, cargoId: string }) {
+  async submitOnboarding(@Req() req: any, @Body() body: { cargoId: string }) {
     const user = await this.prisma.user.update({
-      where: { id: body.userId },
+      where: { id: req.user.userId },
       data: { cargoId: body.cargoId },
       include: { cargo: true },
     });
@@ -144,8 +141,11 @@ export class AppController {
     return { success: true, missionId: mission.id };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('users/:id')
-  async updateUser(@Param('id') id: string, @Body() body: { name?: string, avatarId?: string, examDate?: string }) {
+  async updateUser(@Req() req: any, @Param('id') id: string, @Body() body: { name?: string, avatarId?: string, examDate?: string }) {
+    if (id !== req.user.userId) throw new UnauthorizedException();
+    
     const dataToUpdate: any = {
       name: body.name,
       avatarId: body.avatarId
@@ -160,10 +160,11 @@ export class AppController {
     return { success: true, name: user.name, avatarId: user.avatarId, examDate: user.examDate };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('dashboard')
-  async getDashboard(@Query('userId') userId: string) {
+  async getDashboard(@Req() req: any) {
     const user = await this.prisma.user.findFirst({
-      where: userId ? { id: userId } : undefined,
+      where: { id: req.user.userId },
       include: { 
         missions: { orderBy: { date: 'desc' }, take: 1 },
         cargo: true
@@ -267,8 +268,10 @@ export class AppController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('stats/radar')
-  async getRadarStats(@Query('userId') userId: string) {
+  async getRadarStats(@Req() req: any) {
+    const userId = req.user.userId;
     if (!userId) return [];
     
     // Fetch user answers joined with topics and subjects
@@ -326,8 +329,10 @@ export class AppController {
     return finalRadar;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('stats/diagnostics')
-  async getDiagnostics(@Query('userId') userId: string) {
+  async getDiagnostics(@Req() req: any) {
+    const userId = req.user.userId;
     if (!userId) return [];
     
     const answers = await this.prisma.userAnswer.findMany({
@@ -376,11 +381,13 @@ export class AppController {
     return diagnostics.slice(0, 2);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('subjects')
   async getSubjects() {
     return this.prisma.subject.findMany();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('questions')
   async getQuestions(@Query('subjectId') subjectId?: string) {
     return this.prisma.question.findMany({
@@ -394,9 +401,10 @@ export class AppController {
     });
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('answers')
-  async submitAnswer(@Body() body: { userId: string; questionId: string; optionIndex: number; timeSpentMs: number }) {
-    const user = await this.prisma.user.findUnique({ where: { id: body.userId } });
+  async submitAnswer(@Req() req: any, @Body() body: { questionId: string; optionIndex: number; timeSpentMs: number }) {
+    const user = await this.prisma.user.findUnique({ where: { id: req.user.userId } });
     const question = await this.prisma.question.findUnique({ where: { id: body.questionId } });
     
     if (!user || !question) return { success: false };
@@ -427,6 +435,7 @@ export class AppController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('simulados')
   async getSimulados(@Query('cargoId') cargoId: string) {
     return this.prisma.simulado.findMany({
@@ -439,11 +448,12 @@ export class AppController {
     });
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('simulados/:id/start')
-  async startSimulado(@Param('id') simuladoId: string, @Body() body: { userId: string }) {
+  async startSimulado(@Req() req: any, @Param('id') simuladoId: string) {
     const attempt = await this.prisma.simuladoAttempt.create({
       data: {
-        userId: body.userId,
+        userId: req.user.userId,
         simuladoId: simuladoId
       }
     });
