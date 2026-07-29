@@ -10,6 +10,8 @@ import {
   Req,
   UploadedFile,
   UseInterceptors,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PrismaService } from './prisma.service';
@@ -813,7 +815,7 @@ export class AppController {
     @Body() body: { title: string; banca: string; orgao: string; year: string; topicId: string }
   ) {
     if (!file) {
-      throw new Error('Nenhum arquivo enviado.');
+      throw new BadRequestException('Nenhum arquivo enviado.');
     }
 
     try {
@@ -934,7 +936,7 @@ export class AppController {
       };
     } catch (error) {
       console.error('Erro ao extrair PDF:', error);
-      throw new Error('Falha ao processar a prova com IA: ' + error.message);
+      throw new InternalServerErrorException('Falha ao processar a prova com IA: ' + error.message);
     }
   }
 }
