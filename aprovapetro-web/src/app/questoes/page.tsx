@@ -265,9 +265,11 @@ export default function QuestionsPlayer() {
                       💡 Macete da PETRA IA
                     </h4>
                     <p className="text-sm text-[#F5C518] leading-relaxed font-medium">
-                      {feedback.explanation?.includes('Macete:') 
-                        ? feedback.explanation.split('Macete:')[1].trim()
-                        : "Sempre elimine as opções que usam palavras absolutas como 'nunca', 'sempre', ou 'exclusivamente' antes de chutar!"}
+                      {feedback.tip 
+                        ? feedback.tip
+                        : feedback.explanation?.includes('Macete:') 
+                          ? feedback.explanation.split('Macete:')[1].trim()
+                          : "Sempre elimine as opções que usam palavras absolutas como 'nunca', 'sempre', ou 'exclusivamente' antes de chutar!"}
                     </p>
                   </div>
                 </div>
