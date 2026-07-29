@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { FloatingChat } from "@/components/FloatingChat";
 import { SessionGuard } from "@/components/SessionGuard";
+import { Sidebar } from "@/components/Sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,8 +44,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-black`}
     >
-      <body className="h-full flex flex-col items-center">
-        <div className="w-full h-full max-w-md bg-[#0A0F0D] overflow-hidden relative shadow-2xl">
+      <body className="h-full flex flex-row bg-[#0A0F0D] items-start justify-center md:justify-start">
+        <Sidebar />
+        <div className="flex-1 w-full max-w-md md:max-w-none h-full bg-[#0A0F0D] overflow-hidden relative shadow-2xl">
           {children}
           <FloatingChat />
           <SessionGuard />

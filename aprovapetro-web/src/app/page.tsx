@@ -158,11 +158,11 @@ const AVATARS = [
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="flex-1 overflow-y-auto px-5 pb-8 space-y-6 pt-2"
+        className="flex-1 overflow-y-auto px-5 pb-8 pt-2"
       >
         
         {/* GREETING */}
-        <motion.section variants={itemVariants}>
+        <motion.section variants={itemVariants} className="mb-6">
           <h1 className="text-2xl font-bold">{greeting}, {data.name}!</h1>
           <button 
             onClick={() => setShowDateModal(true)}
@@ -180,55 +180,106 @@ const AVATARS = [
           </button>
         </motion.section>
 
-        {/* MISSÃO DIÁRIA */}
-        {data.mission && (
-          <motion.div variants={itemVariants}>
-            <Card className="bg-[#111C22] border-zinc-800/50 rounded-2xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#3ADB6E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <CardContent className="p-5 relative z-10">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-bold text-lg">Missão Diária</h3>
-                  <span className="text-[#3ADB6E] text-sm font-medium">{completedTasks.length}/{data.mission.tasks.length} concluído</span>
-                </div>
-                <Progress value={(completedTasks.length / data.mission.tasks.length) * 100} className="h-1.5 bg-zinc-800 mb-5" indicatorClassName="bg-[#3ADB6E] shadow-[0_0_10px_#3ADB6E]" />
-                
-                <div className="space-y-3">
-                  {data.mission.tasks.map((task: any, i: number) => {
-                    const isCompleted = completedTasks.includes(i);
-                    return (
-                      <motion.button 
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.95 }}
-                        key={i} 
-                        onClick={() => handleTaskClick(i, task.type)}
-                        className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                          isCompleted 
-                            ? 'bg-[#3ADB6E]/10 border-[#3ADB6E]/50 shadow-[0_0_15px_rgba(58,219,110,0.15)]' 
-                            : 'bg-[#0A0F0D] border-zinc-800/30 hover:border-zinc-700'
-                        }`}
-                      >
-                        <motion.div 
-                          layout
-                          className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
-                            isCompleted ? 'bg-[#3ADB6E] border-[#3ADB6E]' : 'border-zinc-600'
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+
+          {/* MISSÃO DIÁRIA */}
+          {data.mission && (
+            <motion.div variants={itemVariants}>
+              <Card className="bg-[#111C22] border-zinc-800/50 rounded-2xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#3ADB6E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <CardContent className="p-5 relative z-10">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-lg">Missão Diária</h3>
+                    <span className="text-[#3ADB6E] text-sm font-medium">{completedTasks.length}/{data.mission.tasks.length} concluído</span>
+                  </div>
+                  <Progress value={(completedTasks.length / data.mission.tasks.length) * 100} className="h-1.5 bg-zinc-800 mb-5" indicatorClassName="bg-[#3ADB6E] shadow-[0_0_10px_#3ADB6E]" />
+                  
+                  <div className="space-y-3">
+                    {data.mission.tasks.map((task: any, i: number) => {
+                      const isCompleted = completedTasks.includes(i);
+                      return (
+                        <motion.button 
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.95 }}
+                          key={i} 
+                          onClick={() => handleTaskClick(i, task.type)}
+                          className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                            isCompleted 
+                              ? 'bg-[#3ADB6E]/10 border-[#3ADB6E]/50 shadow-[0_0_15px_rgba(58,219,110,0.15)]' 
+                              : 'bg-[#0A0F0D] border-zinc-800/30 hover:border-zinc-700'
                           }`}
                         >
-                          {isCompleted && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><CheckCircle2 className="w-4 h-4 text-[#0A0F0D]" /></motion.div>}
-                        </motion.div>
-                        <span className={`text-sm transition-colors ${isCompleted ? 'text-[#3ADB6E] font-medium line-through decoration-[#3ADB6E]/50' : 'text-zinc-300'}`}>
-                          {task.title}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+                          <motion.div 
+                            layout
+                            className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
+                              isCompleted ? 'bg-[#3ADB6E] border-[#3ADB6E]' : 'border-zinc-600'
+                            }`}
+                          >
+                            {isCompleted && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><CheckCircle2 className="w-4 h-4 text-[#0A0F0D]" /></motion.div>}
+                          </motion.div>
+                          <span className={`text-sm transition-colors ${isCompleted ? 'text-[#3ADB6E] font-medium line-through decoration-[#3ADB6E]/50' : 'text-zinc-300'}`}>
+                            {task.title}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-        {/* INDEX E STATS */}
-        <motion.div variants={itemVariants}>
+          {/* RANKING BANNER (moved under Missao on desktop) */}
+          <motion.div 
+            variants={itemVariants}
+            whileHover={{ scale: 1.02 }}
+            className={`border rounded-2xl p-4 flex items-center justify-between shadow-lg ${
+              data.topPercent > 50 
+                ? 'bg-gradient-to-r from-red-500/20 to-transparent border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]' 
+                : data.topPercent <= 20
+                  ? 'bg-gradient-to-r from-[#3ADB6E]/20 to-transparent border-[#3ADB6E]/30 shadow-[0_0_20px_rgba(58,219,110,0.1)]'
+                  : 'bg-gradient-to-r from-[#F5C518]/20 to-transparent border-[#F5C518]/30 shadow-[0_0_20px_rgba(245,197,24,0.1)]'
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <motion.div 
+                animate={{ rotate: [0, -10, 10, -10, 10, 0] }} 
+                transition={{ repeat: Infinity, duration: 2, repeatDelay: 3 }}
+                className="w-12 h-12 flex items-center justify-center text-3xl"
+              >
+                {data.topPercent > 50 ? '⚠️' : data.topPercent <= 20 ? '👑' : '🏆'}
+              </motion.div>
+              <div>
+                <h4 className={`font-bold ${
+                  data.topPercent > 50 ? 'text-red-400' : data.topPercent <= 20 ? 'text-[#3ADB6E]' : 'text-[#F5C518]'
+                }`}>
+                  {data.topPercent > 50 ? 'Alerta de Queda!' : data.topPercent <= 20 ? 'Elite Consolidada!' : 'Subida de Ranking!'}
+                </h4>
+                <p className="text-xs text-zinc-400">
+                  {data.topPercent > 50 
+                    ? 'Você está perdendo posições. Reaja!' 
+                    : data.topPercent <= 20 
+                      ? 'Você está no topo da cadeia.' 
+                      : 'Você ultrapassou vários candidatos.'}
+                </p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => setShowRankModal(true)} 
+              size="sm" 
+              className={`font-bold rounded-xl transition-transform active:scale-95 text-black ${
+                data.topPercent > 50 ? 'bg-red-500 hover:bg-red-600' : data.topPercent <= 20 ? 'bg-[#3ADB6E] hover:bg-[#009266]' : 'bg-[#F5C518] hover:bg-[#d9a51c]'
+              }`}
+            >
+              Ver Rank
+            </Button>
+          </motion.div>
+        </div> {/* End of lg:col-span-2 column */}
+
+        <div className="space-y-6">
+          {/* INDEX E STATS */}
+          <motion.div variants={itemVariants}>
           <Card className="bg-[#111C22] border-zinc-800/50 rounded-2xl relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-t from-[#F5C518]/5 to-transparent" />
             <CardContent className="p-6 flex flex-col items-center relative z-10">
@@ -309,52 +360,8 @@ const AVATARS = [
           </motion.div>
         </motion.div>
 
-        {/* RANKING BANNER */}
-        <motion.div 
-          variants={itemVariants}
-          whileHover={{ scale: 1.02 }}
-          className={`border rounded-2xl p-4 flex items-center justify-between mt-6 shadow-lg ${
-            data.topPercent > 50 
-              ? 'bg-gradient-to-r from-red-500/20 to-transparent border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]' 
-              : data.topPercent <= 20
-                ? 'bg-gradient-to-r from-[#3ADB6E]/20 to-transparent border-[#3ADB6E]/30 shadow-[0_0_20px_rgba(58,219,110,0.1)]'
-                : 'bg-gradient-to-r from-[#F5C518]/20 to-transparent border-[#F5C518]/30 shadow-[0_0_20px_rgba(245,197,24,0.1)]'
-          }`}
-        >
-          <div className="flex items-center gap-4">
-            <motion.div 
-              animate={{ rotate: [0, -10, 10, -10, 10, 0] }} 
-              transition={{ repeat: Infinity, duration: 2, repeatDelay: 3 }}
-              className="w-12 h-12 flex items-center justify-center text-3xl"
-            >
-              {data.topPercent > 50 ? '⚠️' : data.topPercent <= 20 ? '👑' : '🏆'}
-            </motion.div>
-            <div>
-              <h4 className={`font-bold ${
-                data.topPercent > 50 ? 'text-red-400' : data.topPercent <= 20 ? 'text-[#3ADB6E]' : 'text-[#F5C518]'
-              }`}>
-                {data.topPercent > 50 ? 'Alerta de Queda!' : data.topPercent <= 20 ? 'Elite Consolidada!' : 'Subida de Ranking!'}
-              </h4>
-              <p className="text-xs text-zinc-400">
-                {data.topPercent > 50 
-                  ? 'Você está perdendo posições. Reaja!' 
-                  : data.topPercent <= 20 
-                    ? 'Você está no topo da cadeia alimentar.' 
-                    : 'Você ultrapassou dezenas de candidatos.'}
-              </p>
-            </div>
-          </div>
-          <Button 
-            onClick={() => setShowRankModal(true)} 
-            size="sm" 
-            className={`font-bold rounded-xl transition-transform active:scale-95 text-black ${
-              data.topPercent > 50 ? 'bg-red-500 hover:bg-red-600' : data.topPercent <= 20 ? 'bg-[#3ADB6E] hover:bg-[#009266]' : 'bg-[#F5C518] hover:bg-[#d9a51c]'
-            }`}
-          >
-            Ver Rank
-          </Button>
-        </motion.div>
-        
+        </div> {/* End of right column */}
+        </div> {/* End of grid */}
       </motion.main>
 
       <AnimatePresence>
