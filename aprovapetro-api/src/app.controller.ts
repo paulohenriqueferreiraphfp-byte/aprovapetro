@@ -195,13 +195,19 @@ export class AppController {
     } 
 
     // REAL RANKING
-    const usersAhead = await this.prisma.user.count({
-      where: { xp: { gt: user.xp } }
-    });
-    const totalUsers = await this.prisma.user.count();
-    
-    const rankPosition = usersAhead + 1;
-    let topPercent = Math.round((rankPosition / totalUsers) * 100);
+    let topPercent = 100;
+    if (user.xp > 0) {
+      const usersAhead = await this.prisma.user.count({
+        where: { xp: { gt: user.xp } }
+      });
+      const totalUsers = await this.prisma.user.count();
+      if (totalUsers > 1) {
+        const rank = usersAhead + 1;
+        topPercent = Math.max(1, Math.round((rank / totalUsers) * 100));
+      } else {
+        topPercent = 1;
+      }
+    }
     if (topPercent === 0) topPercent = 1; 
     
     let indexStatus = { text: "REGULAR", color: "#F5C518", bg: "bg-[#F5C518]" };
