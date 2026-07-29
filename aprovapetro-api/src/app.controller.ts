@@ -589,6 +589,7 @@ export class AppController {
       success: true,
       isCorrect,
       explanation: question.explanation,
+      tip: question.tip,
       correctOption: question.correctOption,
     };
   }
