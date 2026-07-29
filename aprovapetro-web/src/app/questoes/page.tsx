@@ -109,8 +109,11 @@ export default function QuestionsPlayer() {
         {/* STATEMENT */}
         <Card className="bg-[#111C22] border-zinc-800/50 rounded-2xl mb-6">
           <CardContent className="p-5">
-            <p className="text-lg leading-relaxed text-white whitespace-pre-wrap font-medium">
-              {currentQ.statement || 'Erro: Enunciado não encontrado no banco de dados.'}
+            <p 
+              className="text-lg leading-relaxed whitespace-pre-wrap font-bold"
+              style={{ color: '#ffffff', minHeight: '40px' }}
+            >
+              {currentQ.statement || 'Erro: Enunciado não encontrado.'}
             </p>
           </CardContent>
         </Card>
