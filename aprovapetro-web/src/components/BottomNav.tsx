@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, HelpCircle, Zap, ClipboardList, User } from 'lucide-react';
+import { Home, Library, Zap, ClipboardList, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function BottomNav() {
@@ -10,7 +10,7 @@ export function BottomNav() {
 
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/questoes', icon: HelpCircle, label: 'Questões' },
+    { href: '/acervo', icon: Library, label: 'Acervo' },
     { href: '/missao', icon: Zap, label: 'Missão' },
     { href: '/simulados', icon: ClipboardList, label: 'Simulados' },
     { href: '/perfil', icon: User, label: 'Perfil' },
