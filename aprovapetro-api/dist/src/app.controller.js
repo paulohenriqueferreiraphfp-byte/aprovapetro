@@ -47,6 +47,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const prisma_service_1 = require("./prisma.service");
 const generative_ai_1 = require("@google/generative-ai");
 const jwt_1 = require("@nestjs/jwt");
@@ -70,7 +71,12 @@ let AppController = class AppController {
             if (!isMatch)
                 throw new common_1.UnauthorizedException('E-mail ou senha incorretos.');
         }
-        const payload = { email: user.email, sub: user.id };
+        const sessionId = crypto.randomUUID();
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { sessionId },
+        });
+        const payload = { email: user.email, sub: user.id, sessionId };
         const accessToken = this.jwtService.sign(payload);
         return {
             userId: user.id,
@@ -100,6 +106,7 @@ let AppController = class AppController {
         }
         const salt = await bcrypt.genSalt();
         const hash = await bcrypt.hash(body.password || 'senha123', salt);
+        const sessionId = crypto.randomUUID();
         const user = await this.prisma.user.create({
             data: {
                 name: body.name,
@@ -108,9 +115,10 @@ let AppController = class AppController {
                 indexAprovaPetro: 0,
                 xp: 0,
                 avatarId: 'avatar-1',
+                sessionId: sessionId,
             },
         });
-        const payload = { email: user.email, sub: user.id };
+        const payload = { email: user.email, sub: user.id, sessionId };
         const accessToken = this.jwtService.sign(payload);
         return {
             userId: user.id,
@@ -121,8 +129,19 @@ let AppController = class AppController {
             avatarId: user.avatarId,
         };
     }
-    checkSession() {
-        return { isValid: true };
+    async checkSession(req) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: req.user.userId },
+            select: { sessionId: true, avatarId: true, name: true }
+        });
+        if (!user || user.sessionId !== req.user.sessionId) {
+            return { valid: false };
+        }
+        return {
+            valid: true,
+            avatarId: user.avatarId,
+            name: user.name
+        };
     }
     async hotmartWebhook(body) {
         if (body.event === 'PURCHASE_APPROVED' && body.data && body.data.buyer) {
@@ -467,15 +486,18 @@ let AppController = class AppController {
         return this.prisma.subject.findMany();
     }
     async getQuestions(subjectId) {
-        return this.prisma.question.findMany({
+        const questions = await this.prisma.question.findMany({
             where: subjectId ? { topic: { subjectId } } : undefined,
             include: {
-                options: true,
-                topic: {
-                    include: { subject: true },
-                },
+                topic: { include: { subject: true } },
+                options: { orderBy: { orderIndex: 'asc' } },
             },
         });
+        for (let i = questions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [questions[i], questions[j]] = [questions[j], questions[i]];
+        }
+        return questions.slice(0, 20);
     }
     async submitAnswer(req, body) {
         const user = await this.prisma.user.findUnique({
@@ -518,6 +540,7 @@ let AppController = class AppController {
             success: true,
             isCorrect,
             explanation: question.explanation,
+            tip: question.tip,
             correctOption: question.correctOption,
         };
     }
@@ -650,6 +673,126 @@ let AppController = class AppController {
             };
         }
     }
+    async getExams() {
+        return this.prisma.exam.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async extractQuestions(file, body) {
+        if (!file) {
+            throw new Error('Nenhum arquivo enviado.');
+        }
+        try {
+            const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            const model = genAI.getGenerativeModel({
+                model: 'gemini-1.5-flash',
+                generationConfig: {
+                    responseMimeType: 'application/json',
+                }
+            });
+            const prompt = `
+        Você é um assistente especializado em provas de concursos públicos.
+        Eu vou te enviar um PDF de uma prova.
+        Extraia todas as questões desta prova e retorne ESTRITAMENTE em formato JSON.
+        
+        O JSON deve ser um array de objetos com o seguinte formato exato:
+        [
+          {
+            "statement": "Texto do enunciado da questão completo...",
+            "options": [
+              "Texto da alternativa A",
+              "Texto da alternativa B",
+              "Texto da alternativa C",
+              "Texto da alternativa D",
+              "Texto da alternativa E"
+            ],
+            "correctOption": 0, // Índice da alternativa correta (0 a 4). Se você não tiver o gabarito ou não tiver certeza, infira a resposta correta baseado no seu vasto conhecimento, ou chute 0 se for impossível.
+            "explanation": "Explicação detalhada da resposta...",
+            "tip": "Dica rápida (Macete da PETRA IA) para acertar questões como essa no futuro"
+          }
+        ]
+
+        AVISOS:
+        1. NÃO invente questões. Extraia EXATAMENTE o que está no PDF.
+        2. O JSON deve conter o array raiz. Não coloque blocos de marcação markdown (como \`\`\`json). Apenas retorne os dados.
+        3. Se não houver 5 alternativas, coloque as que existem.
+      `;
+            const result = await model.generateContent([
+                prompt,
+                {
+                    inlineData: {
+                        data: file.buffer.toString('base64'),
+                        mimeType: 'application/pdf',
+                    },
+                },
+            ]);
+            const responseText = result.response.text();
+            let questionsData = [];
+            try {
+                questionsData = JSON.parse(responseText);
+            }
+            catch (e) {
+                const cleaned = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+                questionsData = JSON.parse(cleaned);
+            }
+            const exam = await this.prisma.exam.create({
+                data: {
+                    title: body.title || 'Prova Extraída via IA',
+                    banca: body.banca || 'DESCONHECIDA',
+                    orgao: body.orgao || 'DESCONHECIDO',
+                    year: parseInt(body.year) || new Date().getFullYear(),
+                }
+            });
+            let defaultTopic = await this.prisma.topic.findFirst({
+                where: { name: 'Assuntos Gerais' }
+            });
+            if (!defaultTopic) {
+                let subject = await this.prisma.subject.findFirst();
+                if (!subject) {
+                    subject = await this.prisma.subject.create({
+                        data: { name: 'Conhecimentos Básicos', color: '#3ADB6E' }
+                    });
+                }
+                defaultTopic = await this.prisma.topic.create({
+                    data: { name: 'Assuntos Gerais', subjectId: subject.id }
+                });
+            }
+            const finalTopicId = body.topicId || defaultTopic.id;
+            let savedCount = 0;
+            for (const qData of questionsData) {
+                if (!qData.statement || !qData.options || !Array.isArray(qData.options))
+                    continue;
+                await this.prisma.question.create({
+                    data: {
+                        topicId: finalTopicId,
+                        bank: exam.banca,
+                        year: exam.year,
+                        statement: qData.statement,
+                        correctOption: qData.correctOption || 0,
+                        explanation: qData.explanation || '',
+                        tip: qData.tip || '',
+                        options: {
+                            create: qData.options.map((optText, index) => ({
+                                text: optText,
+                                orderIndex: index
+                            }))
+                        }
+                    }
+                });
+                savedCount++;
+            }
+            return {
+                success: true,
+                message: `${savedCount} questões extraídas e salvas com sucesso!`,
+                examId: exam.id,
+                savedCount
+            };
+        }
+        catch (error) {
+            console.error('Erro ao extrair PDF:', error);
+            throw new Error('Falha ao processar a prova com IA: ' + error.message);
+        }
+    }
 };
 exports.AppController = AppController;
 __decorate([
@@ -669,9 +812,10 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)('auth/check-session'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
 ], AppController.prototype, "checkSession", null);
 __decorate([
     (0, common_1.Post)('webhooks/hotmart'),
@@ -793,6 +937,21 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AppController.prototype, "chat", null);
+__decorate([
+    (0, common_1.Get)('exams'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AppController.prototype, "getExams", null);
+__decorate([
+    (0, common_1.Post)('extract'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AppController.prototype, "extractQuestions", null);
 exports.AppController = AppController = __decorate([
     (0, common_1.Controller)('api'),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,

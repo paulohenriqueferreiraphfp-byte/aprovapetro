@@ -27,9 +27,15 @@ export declare class AppController {
         email: string;
         avatarId: string | null;
     }>;
-    checkSession(): {
-        isValid: boolean;
-    };
+    checkSession(req: any): Promise<{
+        valid: boolean;
+        avatarId?: undefined;
+        name?: undefined;
+    } | {
+        valid: boolean;
+        avatarId: string | null;
+        name: string;
+    }>;
     hotmartWebhook(body: any): Promise<{
         received: boolean;
     }>;
@@ -37,6 +43,7 @@ export declare class AppController {
         id: string;
         name: string;
         description: string | null;
+        level: string;
     }[]>;
     submitOnboarding(req: {
         user: {
@@ -167,6 +174,7 @@ export declare class AppController {
         statement: string;
         correctOption: number;
         explanation: string | null;
+        tip: string | null;
         topicId: string;
     })[]>;
     submitAnswer(req: {
@@ -181,11 +189,13 @@ export declare class AppController {
         success: boolean;
         isCorrect?: undefined;
         explanation?: undefined;
+        tip?: undefined;
         correctOption?: undefined;
     } | {
         success: boolean;
         isCorrect: boolean;
         explanation: string | null;
+        tip: string | null;
         correctOption: number;
     }>;
     getSimulados(cargoId: string): Promise<({
@@ -231,6 +241,7 @@ export declare class AppController {
                 statement: string;
                 correctOption: number;
                 explanation: string | null;
+                tip: string | null;
                 topicId: string;
             };
         } & {
@@ -273,5 +284,28 @@ export declare class AppController {
         message: string;
     }): Promise<{
         reply: string;
+    }>;
+    getExams(): Promise<{
+        id: string;
+        createdAt: Date;
+        year: number;
+        title: string;
+        banca: string;
+        orgao: string;
+        pdfUrl: string | null;
+        gabaritoUrl: string | null;
+        isPremium: boolean;
+    }[]>;
+    extractQuestions(file: Express.Multer.File, body: {
+        title: string;
+        banca: string;
+        orgao: string;
+        year: string;
+        topicId: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        examId: string;
+        savedCount: number;
     }>;
 }

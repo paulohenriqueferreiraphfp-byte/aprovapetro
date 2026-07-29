@@ -5,6 +5,9 @@ const prisma = new client_1.PrismaClient();
 async function main() {
     console.log('Limpando banco de dados para o novo seed...');
     await prisma.userAnswer.deleteMany();
+    await prisma.simuladoAttempt.deleteMany();
+    await prisma.simuladoQuestion.deleteMany();
+    await prisma.simulado.deleteMany();
     await prisma.option.deleteMany();
     await prisma.question.deleteMany();
     await prisma.topic.deleteMany();
@@ -14,10 +17,15 @@ async function main() {
     await prisma.user.deleteMany();
     console.log('Inserindo Cargos (Nível Técnico Petrobras/Transpetro)...');
     const cargos = [
-        { name: 'Técnico em Segurança do Trabalho', description: 'Prevenção de acidentes e NRs.' },
-        { name: 'Técnico em Eletrotécnica', description: 'Manutenção elétrica e sistemas de potência.' },
-        { name: 'Técnico em Mecânica', description: 'Manutenção de máquinas e equipamentos.' },
-        { name: 'Técnico de Operação', description: 'Operação de processos de refino.' },
+        { name: 'Técnico em Segurança do Trabalho', description: 'Prevenção de acidentes e NRs.', level: 'TÉCNICO' },
+        { name: 'Técnico em Eletrotécnica', description: 'Manutenção elétrica e sistemas de potência.', level: 'TÉCNICO' },
+        { name: 'Técnico em Mecânica', description: 'Manutenção de máquinas e equipamentos.', level: 'TÉCNICO' },
+        { name: 'Técnico de Operação', description: 'Operação de processos de refino.', level: 'TÉCNICO' },
+        { name: 'Engenheiro Mecânico', description: 'Projetos e manutenção mecânica avançada.', level: 'SUPERIOR' },
+        { name: 'Engenheiro de Produção', description: 'Otimização e gestão de processos industriais.', level: 'SUPERIOR' },
+        { name: 'Engenheiro Eletricista', description: 'Sistemas elétricos de alta tensão e automação.', level: 'SUPERIOR' },
+        { name: 'Geólogo', description: 'Exploração e estudo de rochas e reservatórios.', level: 'SUPERIOR' },
+        { name: 'Administrador', description: 'Gestão de recursos e contratos.', level: 'SUPERIOR' }
     ];
     for (const cargo of cargos) {
         await prisma.cargo.create({ data: cargo });
@@ -53,6 +61,14 @@ async function main() {
             name: 'Conhecimentos Específicos',
             color: '#00B37E',
             topics: { create: [{ name: 'NR-10' }, { name: 'Termodinâmica' }] },
+        },
+        include: { topics: true },
+    });
+    const subjEng = await prisma.subject.create({
+        data: {
+            name: 'Engenharia Específica',
+            color: '#F59E0B',
+            topics: { create: [{ name: 'Mecânica dos Fluidos' }, { name: 'Eletrônica de Potência' }, { name: 'Geofísica' }, { name: 'Gestão de Projetos' }] },
         },
         include: { topics: true },
     });
