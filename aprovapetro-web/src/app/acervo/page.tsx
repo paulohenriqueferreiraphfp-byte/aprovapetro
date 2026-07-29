@@ -122,14 +122,14 @@ export default function AcervoPage() {
                         <div className="flex gap-2">
                           <Button 
                             variant="outline" 
-                            className="flex-1 border-[#3ADB6E]/30 text-[#3ADB6E] hover:bg-[#3ADB6E]/10 text-xs font-bold h-9"
+                            className="flex-1 bg-transparent border-[#3ADB6E]/50 text-[#3ADB6E] hover:bg-[#3ADB6E]/10 text-xs font-bold h-9"
                             onClick={() => alert('Download do PDF da Prova (Em breve, conectado ao Banco de Dados)')}
                           >
                             <Download className="w-3 h-3 mr-1" /> Prova
                           </Button>
                           <Button 
                             variant="outline" 
-                            className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 text-xs font-bold h-9"
+                            className="flex-1 bg-transparent border-zinc-600 text-zinc-300 hover:bg-zinc-800 hover:text-white text-xs font-bold h-9"
                             onClick={() => alert('Download do Gabarito Oficial')}
                           >
                             <Download className="w-3 h-3 mr-1" /> Gabarito
