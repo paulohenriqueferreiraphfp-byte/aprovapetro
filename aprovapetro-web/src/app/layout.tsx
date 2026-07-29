@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { FloatingChat } from "@/components/FloatingChat";
 import { SessionGuard } from "@/components/SessionGuard";
+import { InstallPwaBanner } from "@/components/InstallPwaBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,25 +45,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-black`}
     >
       <body className="h-full flex flex-col items-center">
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                  for(let registration of registrations) {
-                    registration.unregister();
-                  }
-                });
-                caches.keys().then(function(names) {
-                  for (let name of names) caches.delete(name);
-                });
-              }
-            `,
-          }}
-        />
         <div className="w-full h-full max-w-md bg-[#0A0F0D] overflow-hidden relative shadow-2xl">
           {children}
           <FloatingChat />
+          <InstallPwaBanner />
           <SessionGuard />
         </div>
       </body>

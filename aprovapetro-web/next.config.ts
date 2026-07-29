@@ -3,7 +3,10 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
   dest: 'public',
-  disable: process.env.NODE_ENV === 'development' || true, // Force disable PWA for now to kill cache
+  disable: process.env.NODE_ENV === 'development',
+  cacheOnFrontEndNav: false,
+  aggressiveFrontEndNavCaching: false,
+  reloadOnOnline: true,
 });
 
 const nextConfig: NextConfig = {
