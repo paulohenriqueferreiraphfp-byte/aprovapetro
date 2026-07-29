@@ -451,11 +451,32 @@ let AppController = class AppController {
             return { success: false };
         let correctCount = 0;
         const totalQuestions = attempt.simulado.questions.length;
+        const answersData = [];
         for (const sq of attempt.simulado.questions) {
             const userAnswer = body.answers[sq.question.id];
-            if (userAnswer === sq.question.correctOption) {
+            const isCorrect = userAnswer === sq.question.correctOption;
+            if (isCorrect) {
                 correctCount++;
             }
+            if (userAnswer !== undefined && userAnswer !== null) {
+                answersData.push({
+                    userId: attempt.userId,
+                    questionId: sq.question.id,
+                    isCorrect: isCorrect,
+                    timeSpentMs: 120000
+                });
+            }
+        }
+        if (answersData.length > 0) {
+            await this.prisma.userAnswer.createMany({
+                data: answersData
+            });
+        }
+        if (correctCount > 0) {
+            await this.prisma.user.update({
+                where: { id: attempt.userId },
+                data: { xp: { increment: correctCount * 10 } }
+            });
         }
         const score = Math.round((correctCount / totalQuestions) * 100);
         await this.prisma.simuladoAttempt.update({

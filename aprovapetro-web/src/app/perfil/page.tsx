@@ -10,6 +10,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUserStore } from '@/store/userStore';
 
 const AVATARS = [
   { id: 'avatar-1', icon: User, color: '#3ADB6E', bg: 'bg-[#3ADB6E]/20' },
@@ -26,6 +27,7 @@ export default function PerfilPage() {
   const [editName, setEditName] = useState('');
   const [editAvatar, setEditAvatar] = useState('avatar-1');
   const [isSaving, setIsSaving] = useState(false);
+  const { updateUser } = useUserStore();
   
   const router = useRouter();
 
@@ -60,12 +62,8 @@ export default function PerfilPage() {
       if (res.ok) {
         // Optimistic UI Update
         setData({ ...data, name: editName, avatarId: editAvatar });
-        // Update localStorage
-        if (u) {
-          u.name = editName;
-          u.avatarId = editAvatar;
-          localStorage.setItem('user', JSON.stringify(u));
-        }
+        // Update store
+        updateUser({ name: editName, avatarId: editAvatar });
         setIsEditing(false);
       }
     } catch (e) {

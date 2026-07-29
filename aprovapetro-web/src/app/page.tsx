@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Flame, Target, BookOpen, BrainCircuit, Bot, User, Clock, CheckCircle2, ChevronRight, Trophy, Zap, Shield, X } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
+import { TopHeader } from '@/components/TopHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -150,30 +151,7 @@ const AVATARS = [
     <div className="h-full bg-[#0A0F0D] text-white flex flex-col relative pb-20">
       
       {/* HEADER */}
-      <motion.header 
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="px-5 py-4 flex items-center justify-between z-10 sticky top-0 bg-[#0A0F0D]/80 backdrop-blur-md relative border-b border-zinc-800/50"
-      >
-        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className={`w-10 h-10 rounded-full ${isCustomAvatar ? 'bg-zinc-800' : CurrentAvatar.bg} overflow-hidden flex items-center justify-center`}>
-          {isCustomAvatar ? (
-            <img src={data.avatarId} alt="Profile" className="w-full h-full object-cover" />
-          ) : (
-            <CurrentAvatarIcon className="w-6 h-6" style={{ color: CurrentAvatar.color }} />
-          )}
-        </motion.div>
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <img src="/logo.png" alt="AprovaPETRO" className="h-14 object-contain" />
-        </div>
-        <motion.button 
-          whileHover={{ scale: 1.1, boxShadow: "0px 0px 15px rgba(58, 219, 110, 0.5)" }} 
-          whileTap={{ scale: 0.9 }} 
-          className="w-10 h-10 bg-[#3ADB6E]/10 rounded-xl flex items-center justify-center text-[#3ADB6E] transition-shadow"
-        >
-          <Bot className="w-6 h-6" />
-        </motion.button>
-      </motion.header>
+      <TopHeader />
 
       {/* SCROLLABLE CONTENT */}
       <motion.main 

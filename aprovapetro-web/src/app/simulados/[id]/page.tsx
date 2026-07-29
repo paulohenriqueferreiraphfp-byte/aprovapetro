@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Clock, Save } from 'lucide-react';
 import Link from 'next/link';
 
+import { Skeleton } from '@/components/ui/skeleton';
+
 export default function SimuladoPlayer() {
   const { id } = useParams();
   const router = useRouter();
@@ -20,7 +22,7 @@ export default function SimuladoPlayer() {
   const [showReview, setShowReview] = useState(false);
 
   // Timer simulation
-  const [timeLeft, setTimeLeft] = useState(4 * 60 * 60); // 4 hours
+  const [timeLeft, setTimeLeft] = useState(() => 4 * 60 * 60); // 4 hours
 
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem('user') || 'null');
@@ -194,7 +196,25 @@ export default function SimuladoPlayer() {
     );
   }
 
-  if (questions.length === 0) return <div className="h-screen bg-[#121214] flex items-center justify-center text-white">Preparando Simulado...</div>;
+  if (questions.length === 0) {
+    return (
+      <div className="h-screen bg-[#121214] flex flex-col relative">
+        <header className="p-6 border-b border-zinc-800 flex items-center justify-between">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <Skeleton className="h-10 w-32" />
+        </header>
+        <div className="p-8 max-w-3xl w-full mx-auto space-y-6">
+          <Skeleton className="h-6 w-1/3 mb-2" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const currentQInfo = questions[currentIndex];
   const currentQ = currentQInfo.question;

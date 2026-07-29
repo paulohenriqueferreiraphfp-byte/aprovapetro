@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Bot, User, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
 import { TopHeader } from '@/components/TopHeader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function QuestionsPlayer() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<any>(null);
-  const [startTime, setStartTime] = useState<number>(Date.now());
+  const [startTime, setStartTime] = useState<number>(() => Date.now());
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -60,7 +61,22 @@ export default function QuestionsPlayer() {
     setCurrentIndex(prev => Math.min(prev + 1, questions.length - 1));
   };
 
-  if (questions.length === 0) return <div className="h-full bg-[#0A0F0D] flex items-center justify-center text-white">Carregando missão...</div>;
+  if (questions.length === 0) {
+    return (
+      <div className="h-full bg-[#0A0F0D] flex flex-col relative pb-20">
+        <TopHeader />
+        <div className="p-5 space-y-6">
+          <Skeleton className="h-8 w-1/3 mb-2" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const currentQ = questions[currentIndex];
   const optionLabels = ['A', 'B', 'C', 'D', 'E'];

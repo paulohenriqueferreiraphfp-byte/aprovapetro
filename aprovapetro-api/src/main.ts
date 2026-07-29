@@ -6,11 +6,11 @@ import { json } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // 1. Helmet Security Headers
   app.use(helmet());
   app.use(json({ limit: '10mb' }));
-  
+
   // 2. Strict CORS (Hardcoded to bypass env issues)
   app.enableCors({
     origin: ['https://aprovapetro.vercel.app', 'http://localhost:3000'],

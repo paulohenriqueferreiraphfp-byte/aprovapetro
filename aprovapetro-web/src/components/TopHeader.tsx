@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, User, BrainCircuit, Flame, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
@@ -14,15 +13,11 @@ const AVATARS = [
   { id: 'avatar-6', icon: Flame, color: '#FF8A65', bg: 'bg-[#FF8A65]/20' },
 ];
 
-export function TopHeader() {
-  const [avatarId, setAvatarId] = useState('avatar-1');
+import { useUserStore } from '@/store/userStore';
 
-  useEffect(() => {
-    const u = JSON.parse(localStorage.getItem('user') || '{}');
-    if (u.avatarId) {
-      setAvatarId(u.avatarId);
-    }
-  }, []);
+export function TopHeader() {
+  const { user } = useUserStore();
+  const avatarId = user?.avatarId || 'avatar-1';
 
   const isCustomAvatar = avatarId.startsWith('data:image/');
   const CurrentAvatar = AVATARS.find(a => a.id === avatarId) || AVATARS[0];
