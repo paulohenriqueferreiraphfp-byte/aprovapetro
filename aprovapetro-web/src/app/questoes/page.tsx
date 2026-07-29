@@ -109,8 +109,8 @@ export default function QuestionsPlayer() {
         {/* STATEMENT */}
         <Card className="bg-[#111C22] border-zinc-800/50 rounded-2xl mb-6">
           <CardContent className="p-5">
-            <p className="text-[15px] leading-relaxed text-zinc-200 whitespace-pre-wrap">
-              {currentQ.statement}
+            <p className="text-lg leading-relaxed text-white whitespace-pre-wrap font-medium">
+              {currentQ.statement || 'Erro: Enunciado não encontrado no banco de dados.'}
             </p>
           </CardContent>
         </Card>
