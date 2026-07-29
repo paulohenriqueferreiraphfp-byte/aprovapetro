@@ -172,14 +172,18 @@ export class AppController {
     });
     if (!user) return {};
     
-    // Calculate total hours and precision
-    const answers = await this.prisma.userAnswer.findMany({
-      where: { userId: user.id }
+    // Calculate total hours and precision using DB aggregations instead of pulling all rows
+    const aggregate = await this.prisma.userAnswer.aggregate({
+      where: { userId: user.id },
+      _count: { id: true },
+      _sum: { timeSpentMs: true }
+    });
+    const correctCount = await this.prisma.userAnswer.count({
+      where: { userId: user.id, isCorrect: true }
     });
     
-    let totalQuestions = answers.length;
-    let correctCount = answers.filter(a => a.isCorrect).length;
-    let totalTimeMs = answers.reduce((acc, curr) => acc + (curr.timeSpentMs || 0), 0);
+    let totalQuestions = aggregate._count.id;
+    let totalTimeMs = aggregate._sum.timeSpentMs || 0;
     
     const precision = totalQuestions === 0 ? 0 : Math.round((correctCount / totalQuestions) * 100);
     

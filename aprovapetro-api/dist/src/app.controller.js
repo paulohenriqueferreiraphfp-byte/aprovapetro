@@ -185,12 +185,16 @@ let AppController = class AppController {
         });
         if (!user)
             return {};
-        const answers = await this.prisma.userAnswer.findMany({
-            where: { userId: user.id }
+        const aggregate = await this.prisma.userAnswer.aggregate({
+            where: { userId: user.id },
+            _count: { id: true },
+            _sum: { timeSpentMs: true }
         });
-        let totalQuestions = answers.length;
-        let correctCount = answers.filter(a => a.isCorrect).length;
-        let totalTimeMs = answers.reduce((acc, curr) => acc + (curr.timeSpentMs || 0), 0);
+        const correctCount = await this.prisma.userAnswer.count({
+            where: { userId: user.id, isCorrect: true }
+        });
+        let totalQuestions = aggregate._count.id;
+        let totalTimeMs = aggregate._sum.timeSpentMs || 0;
         const precision = totalQuestions === 0 ? 0 : Math.round((correctCount / totalQuestions) * 100);
         const totalMinutes = Math.floor(totalTimeMs / (1000 * 60));
         const hours = Math.floor(totalMinutes / 60);

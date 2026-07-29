@@ -28,6 +28,8 @@ model User {
   answers          UserAnswer[]
   missions         DailyMission[]
   simuladoAttempts SimuladoAttempt[]
+
+  @@index([xp(sort: Desc)])
 }
 
 model Cargo {
@@ -134,6 +136,9 @@ model UserAnswer {
 
   user            User     @relation(fields: [userId], references: [id])
   question        Question @relation(fields: [questionId], references: [id])
+  
+  @@index([userId])
+  @@index([userId, isCorrect])
 }
 
 model AllowedEmail {
