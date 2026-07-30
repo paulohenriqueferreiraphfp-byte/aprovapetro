@@ -69,9 +69,7 @@ export class AppController {
   async register(
     @Body() body: { name: string; email: string; password?: string },
   ) {
-    const isAdmin =
-      body.email === 'paulo.henrique.ferreira.phfp@gmail.com' ||
-      body.email.includes('admin');
+    const isAdmin = body.email === 'paulo.henrique.ferreira.phfp@gmail.com';
 
     if (!isAdmin) {
       const allowed = await this.prisma.allowedEmail.findUnique({
