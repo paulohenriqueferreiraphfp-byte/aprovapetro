@@ -59,7 +59,7 @@ export default function Onboarding() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#121214] flex flex-col items-center justify-center p-4 text-white">
+      <div className="h-full bg-[#121214] flex flex-col items-center justify-center p-4 text-white">
         <div className="animate-spin w-16 h-16 border-4 border-[#00B37E] border-t-transparent rounded-full mb-4"></div>
         <h2 className="text-2xl font-bold text-[#00B37E] animate-pulse">Gerando seu Plano de Estudos...</h2>
         <p className="text-zinc-400 mt-2">Isso pode levar alguns segundos.</p>
@@ -68,7 +68,7 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-[#121214] flex flex-col items-center p-4 text-white overflow-y-auto py-10">
+    <div className="h-full bg-[#121214] flex flex-col items-center p-4 text-white overflow-y-auto py-10">
       <div className="max-w-3xl w-full">
         {step === 1 && (
           <div className="animate-in fade-in zoom-in duration-300">
