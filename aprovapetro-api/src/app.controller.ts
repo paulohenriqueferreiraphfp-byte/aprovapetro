@@ -79,7 +79,7 @@ export class AppController {
       });
       if (!allowed) {
         throw new UnauthorizedException(
-          'E-mail não autorizado. Você precisa adquirir o acesso na Hotmart primeiro.',
+          'E-mail não autorizado. Você precisa adquirir um acesso primeiro.',
         );
       }
     }
