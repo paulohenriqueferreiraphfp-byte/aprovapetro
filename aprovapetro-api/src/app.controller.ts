@@ -161,6 +161,30 @@ export class AppController {
       } catch (e) {
         console.error('Erro ao salvar AllowedEmail:', e);
       }
+    } else if (
+      (body.event === 'REFUNDED' || body.event === 'CHARGEBACK' || body.event === 'CANCELED') &&
+      body.data &&
+      body.data.buyer
+    ) {
+      const buyerEmail = body.data.buyer.email;
+
+      try {
+        // 1. Remover da lista de emails permitidos
+        await this.prisma.allowedEmail.deleteMany({
+          where: { email: buyerEmail },
+        });
+
+        // 2. Deletar a conta do usuário no app (revoga o acesso imediatamente)
+        await this.prisma.user.deleteMany({
+          where: { email: buyerEmail },
+        });
+
+        console.log(
+          `Reembolso/Cancelamento (Hotmart)! Acesso revogado para: ${buyerEmail}`,
+        );
+      } catch (e) {
+        console.error('Erro ao revogar acesso:', e);
+      }
     }
 
     // Sempre retornar 200 OK para a Hotmart saber que recebemos
