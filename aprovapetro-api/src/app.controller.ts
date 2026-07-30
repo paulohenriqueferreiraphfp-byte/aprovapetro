@@ -821,7 +821,7 @@ export class AppController {
     try {
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-3.1-flash-tts-preview',
+        model: 'gemini-robotics-er-1.6-preview',
         generationConfig: {
           responseMimeType: 'application/json',
         }
