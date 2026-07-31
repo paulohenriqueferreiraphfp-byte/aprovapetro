@@ -850,7 +850,7 @@ export class AppController {
       console.error('Erro na IA:', error);
       return {
         reply:
-          'Minhas engrenagens travaram um pouco! Houve um erro de conexão com a central de inteligência. Tente novamente mais tarde.',
+          `Minhas engrenagens travaram um pouco! Erro técnico: ${error.message}`,
       };
     }
   }
