@@ -17,6 +17,8 @@ export default function SimuladosList() {
   const [simulados, setSimulados] = useState<any[]>(simuladosData || []);
   const router = useRouter();
 
+  const [isGenerating, setIsGenerating] = useState(false);
+
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem('user') || 'null');
     if (!u) {
@@ -33,6 +35,23 @@ export default function SimuladosList() {
       .catch(console.error);
   }, [router, setSimuladosData]);
 
+  const handleGenerateRandom = async () => {
+    setIsGenerating(true);
+    try {
+      const res = await apiFetch('https://aprovapetro.onrender.com/api/simulados/random/create', {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (data.id) {
+        router.push(`/simulados/${data.id}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao gerar simulado inédito. Tente novamente.');
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="h-full bg-[#0A0F0D] text-white flex flex-col relative pb-20">
       
@@ -44,6 +63,19 @@ export default function SimuladosList() {
           <h1 className="text-2xl font-bold">Simulados Oficiais</h1>
           <p className="text-zinc-400 text-sm mt-1">Teste seus conhecimentos em condições reais.</p>
         </header>
+
+        <Button 
+          onClick={handleGenerateRandom}
+          disabled={isGenerating}
+          className="w-full bg-[#F5C518] hover:bg-[#d9a51c] text-black py-8 font-bold rounded-2xl text-lg shadow-[0_0_20px_rgba(245,197,24,0.3)] flex items-center justify-center gap-3 transition-all"
+        >
+          {isGenerating ? (
+            <div className="animate-spin w-6 h-6 border-4 border-black border-t-transparent rounded-full" />
+          ) : (
+            <Bot className="w-6 h-6" />
+          )}
+          {isGenerating ? 'GERANDO PROVA INÉDITA...' : 'GERAR SIMULADO INÉDITO'}
+        </Button>
 
         <div className="space-y-4">
           {!simuladosData && simulados.length === 0 && (

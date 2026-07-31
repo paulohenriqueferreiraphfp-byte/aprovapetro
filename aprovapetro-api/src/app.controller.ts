@@ -692,6 +692,38 @@ export class AppController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('simulados/random/create')
+  async createRandomSimulado(@Req() req: { user: { userId: string } }) {
+    const user = await this.prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user || !user.cargoId) throw new BadRequestException('Usuário sem cargo definido.');
+
+    const allQuestions = await this.prisma.question.findMany({ select: { id: true } });
+    const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+    const selectedIds = shuffled.slice(0, 30).map(q => q.id);
+
+    if (selectedIds.length === 0) {
+      throw new BadRequestException('Nenhuma questão encontrada no banco.');
+    }
+
+    const simulado = await this.prisma.simulado.create({
+      data: {
+        title: 'Simulado Inédito Gerado por IA',
+        description: 'Prova exclusiva com 30 questões sorteadas aleatoriamente do banco de dados.',
+        durationMin: 180,
+        cargoId: user.cargoId,
+        questions: {
+          create: selectedIds.map((qId, index) => ({
+            questionId: qId,
+            orderIndex: index
+          }))
+        }
+      }
+    });
+
+    return { id: simulado.id };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('simulados/finish')
   async finishSimulado(
     @Req() req: { user: { userId: string } },
