@@ -80,7 +80,7 @@ export default function SimuladoPlayer() {
 
   if (showReview) {
     return (
-      <div className="min-h-screen bg-[#121214] text-white p-8">
+      <div className="h-full overflow-y-auto bg-[#121214] text-white p-8">
         <header className="mb-8 flex items-center gap-4">
           <Button variant="ghost" onClick={() => setShowReview(false)} className="text-zinc-400 hover:text-white">
             <ArrowLeft className="w-5 h-5 mr-2" /> Voltar ao Resumo
