@@ -160,7 +160,7 @@ export default function SimuladoPlayer() {
 
   if (result) {
     return (
-      <div className="h-screen bg-[#121214] text-white flex items-center justify-center p-4">
+      <div className="h-full bg-[#121214] text-white flex items-center justify-center p-4">
         <Card className="w-full max-w-lg bg-[#18181B] border-zinc-800 text-center">
           <CardContent className="p-10 flex flex-col items-center">
             <h1 className="text-3xl font-bold mb-2">Simulado Finalizado!</h1>
@@ -198,7 +198,7 @@ export default function SimuladoPlayer() {
 
   if (questions.length === 0) {
     return (
-      <div className="h-screen bg-[#121214] flex flex-col relative">
+      <div className="h-full bg-[#121214] flex flex-col relative">
         <header className="p-6 border-b border-zinc-800 flex items-center justify-between">
           <Skeleton className="h-10 w-10 rounded-full" />
           <Skeleton className="h-10 w-32" />
@@ -221,7 +221,7 @@ export default function SimuladoPlayer() {
   const currentAnswer = answers[currentQ.id];
 
   return (
-    <div className="h-screen bg-[#121214] text-white flex flex-col">
+    <div className="h-full bg-[#121214] text-white flex flex-col">
       <header className="p-6 border-b border-zinc-800 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/simulados">

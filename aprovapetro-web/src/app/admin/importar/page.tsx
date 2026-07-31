@@ -44,7 +44,7 @@ export default function AdminImport() {
   };
 
   return (
-    <div className="flex h-screen bg-[#121214] text-white">
+    <div className="flex h-full bg-[#121214] text-white">
       {/* Sidebar - Admin Edition */}
       <aside className="w-64 bg-[#18181B] border-r border-zinc-800 p-6 flex flex-col gap-6">
         <div className="text-2xl font-bold text-[#00B37E]">AprovaPETRO <span className="text-xs text-red-500 ml-1">ADMIN</span></div>

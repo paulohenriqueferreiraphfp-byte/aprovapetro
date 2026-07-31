@@ -27,7 +27,7 @@ export default function PetraIA() {
   };
 
   return (
-    <div className="flex h-screen bg-[#121214] text-white">
+    <div className="flex h-full bg-[#121214] text-white">
       {/* Sidebar */}
       <aside className="w-64 bg-[#18181B] border-r border-zinc-800 p-6 flex flex-col gap-6">
         <img src="/logo.png" alt="AprovaPETRO" className="h-8 object-contain self-start" />
