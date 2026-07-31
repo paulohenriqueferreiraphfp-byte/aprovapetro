@@ -826,7 +826,8 @@ export class AppController {
   }
   @Post('chat')
   async chat(@Body() body: { message: string }) {
-    const apiKey = process.env.GEMINI_API_KEY || '';
+    const rawKey = process.env.GEMINI_API_KEY || '';
+    const apiKey = rawKey.replace(/["']/g, '').trim();
     const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
     if (!genAI) {
@@ -873,8 +874,10 @@ export class AppController {
     }
 
     try {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
-      const model = genAI.getGenerativeModel({ 
+      const rawKey = process.env.GEMINI_API_KEY || '';
+      const apiKey = rawKey.replace(/["']/g, '').trim();
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
         model: 'gemini-robotics-er-1.6-preview',
         generationConfig: {
           responseMimeType: 'application/json',
