@@ -694,10 +694,24 @@ export class AppController {
   @UseGuards(JwtAuthGuard)
   @Post('simulados/random/create')
   async createRandomSimulado(@Req() req: { user: { userId: string } }) {
-    const user = await this.prisma.user.findUnique({ where: { id: req.user.userId } });
-    if (!user || !user.cargoId) throw new BadRequestException('Usuário sem cargo definido.');
+    const user = await this.prisma.user.findUnique({
+      where: { id: req.user.userId },
+      include: { cargo: true }
+    });
 
-    const allQuestions = await this.prisma.question.findMany({ select: { id: true } });
+    const userLevel = user?.cargo?.level || 'TÉCNICO';
+
+    // 1. Fetch questions matching level or GERAL
+    const allQuestions = await this.prisma.question.findMany({
+      where: {
+        OR: [
+          { level: userLevel },
+          { level: 'GERAL' }
+        ]
+      },
+      select: { id: true }
+    });
+
     const shuffled = allQuestions.sort(() => 0.5 - Math.random());
     const selectedIds = shuffled.slice(0, 30).map(q => q.id);
 

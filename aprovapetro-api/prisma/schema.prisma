@@ -74,6 +74,7 @@ model Question {
   topicId       String
   bank          String?
   year          Int?
+  level         String  @default("GERAL") // "GERAL", "TÉCNICO", "SUPERIOR"
   statement     String
   correctOption Int
   explanation   String?
